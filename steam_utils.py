@@ -1,4 +1,7 @@
+# References:
 # https://partner.steamgames.com/doc/store/getreviews
+# https://medium.com/codex/efficiently-scraping-steam-game-reviews-with-python-a-comprehensive-guide-3a5732cb7f0b
+# https://stackoverflow.com/a/78263053
 
 import os
 import json
