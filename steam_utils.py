@@ -3,6 +3,7 @@
 # https://medium.com/codex/efficiently-scraping-steam-game-reviews-with-python-a-comprehensive-guide-3a5732cb7f0b
 # https://stackoverflow.com/a/78263053
 
+import argparse
 import os
 import json
 import re
@@ -44,7 +45,7 @@ def get_game_title_from_url(url, replace_underscore=True):
         return ""
 
 
-def get_user_reviews(app_id, language="english", num_per_page=20, filter="recent", review_type="all", limit=20):
+def get_user_reviews(app_id, language="english", num_per_page=20, filter="recent", review_type="all", purchase_type="all", limit=20):
     """
     Fetches user reviews for a given Steam app ID.
 
@@ -54,6 +55,7 @@ def get_user_reviews(app_id, language="english", num_per_page=20, filter="recent
         num_per_page: The number of reviews to fetch per page.
         filter: The filter to apply to the reviews (e.g., "recent").
         review_type: The type of reviews to fetch (e.g., "all").
+        purchase_type: The type of purchase to filter by (e.g., "all").
         limit: The maximum number of reviews to fetch.
 
     Returns:
@@ -66,6 +68,7 @@ def get_user_reviews(app_id, language="english", num_per_page=20, filter="recent
         "num_per_page": num_per_page,
         "filter": filter,
         "review_type": review_type,
+        "purchase_type": purchase_type,
     }
     user_review_url = f"https://store.steampowered.com/appreviews/{app_id}"
     user_reviews = []
@@ -78,10 +81,8 @@ def get_user_reviews(app_id, language="english", num_per_page=20, filter="recent
                 raise Exception(f"Failed to fetch user reviews. Status code: {response.status_code}")
 
             response_json = response.json()
-            for review in response_json["reviews"]:
-                user_reviews.append(review)  # Add each review to the list
+            user_reviews.extend(response_json["reviews"])  # Add each review to the list
 
-            params["cursor"] = response_json.get("cursor", "")
             if not reviews_summary:
                 reviews_summary = {
                     "review_score_desc": response_json.get("query_summary", {}).get("review_score_desc", ""),
@@ -100,7 +101,15 @@ def get_user_reviews(app_id, language="english", num_per_page=20, filter="recent
             log.error(f"An unexpected error occurred: {e}")
             return user_reviews
 
-        log.info(f"Fetched {len(user_reviews)} reviews...")
+        if len(response_json["reviews"]) > 0:
+            log.info(f"Fetched {len(user_reviews)} reviews so far...")
+
+        new_cursor = response_json.get("cursor", "")
+        if new_cursor == params["cursor"]:
+            log.info(f"Found no update in cursor after fetching {len(user_reviews)} reviews")
+            break
+
+        params["cursor"] = new_cursor
         if not params["cursor"]:
             log.info(f"Reached the end of all reviews after fetching {len(user_reviews)} reviews")
             break
@@ -108,16 +117,27 @@ def get_user_reviews(app_id, language="english", num_per_page=20, filter="recent
         if len(response_json["reviews"]) == 0:
             log.info(f"Got 0 reviews after fetching {len(user_reviews)} reviews, stopping...")
             break
+    
+    # Keep only unique reviews from user_reviews
+    seen_review_ids = set()
+    unique_user_reviews = []
+    for review in user_reviews:
+        review_id = review["recommendationid"]
+        if review_id not in seen_review_ids:
+            seen_review_ids.add(review_id)
+            unique_user_reviews.append(review)
 
+    if len(unique_user_reviews) < len(user_reviews):
+        log.info(f"Removed {len(user_reviews) - len(unique_user_reviews)} duplicate reviews.")
     return {
         "query_summary": reviews_summary,
-        "reviews": user_reviews,
+        "reviews": unique_user_reviews,
     }
 
 
 def get_game_details(app_id, cc="IN"):
     """
-    Fetches the details of a Steam game based on its app ID. `cc` is the country code for the store. Retrieves information such as game title, description, release date, and genre.
+    Fetches the details of a Steam game based on its app ID. Retrieves information such as game title, description, release date, and genre.
 
     Args:
         app_id: The ID of the Steam app.
@@ -149,13 +169,16 @@ def get_game_details(app_id, cc="IN"):
 
 
 if __name__ == "__main__":
-    game_url = "https://store.steampowered.com/app/730/CounterStrike_Global_Offensive/"
-    game_id = get_game_id_from_url(game_url)
-    game_title = get_game_title_from_url(game_url)
+    parser = argparse.ArgumentParser(description='Get Steam game details and user reviews.')
+    parser.add_argument('--game_url', type=str, default="https://store.steampowered.com/app/730/CounterStrike_Global_Offensive/", help='Steam store url for game')
+    args = parser.parse_args()
+
+    game_id = get_game_id_from_url(args.game_url)
+    game_title = get_game_title_from_url(args.game_url, replace_underscore=False)
     game_details = get_game_details(game_id)
-    reviews = get_user_reviews(game_id, language="english", num_per_page=50, limit=100, filter="all")
+    reviews_data = get_user_reviews(game_id, language="english", num_per_page=50, limit=500)
 
     with open(f"steam_reviews_{game_id}_{game_title}.json", "w") as f:
-        json.dump(reviews, f, indent=4)
+        json.dump(reviews_data, f, indent=4)
     with open(f"steam_details_{game_id}_{game_title}.json", "w") as f:
         json.dump(game_details, f, indent=4)
