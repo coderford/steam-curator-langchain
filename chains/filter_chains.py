@@ -1,6 +1,5 @@
 from typing import List, Dict, Any
 
-from langchain.callbacks.base import BaseCallbackManager
 from langchain.chains.base import Chain
 from langchain.llms.base import BaseLanguageModel
 from langchain.output_parsers import StructuredOutputParser
