@@ -79,7 +79,7 @@ class LLMFilterChain(Chain):
 
         for review_data in reviews:
             filter_output = filter_chain.invoke(
-                {"review_text": review_data["review"], "format_instructions": format_instructions}, verbose=True
+                {"review_text": review_data["review"], "format_instructions": format_instructions}
             )
             if filter_output.get("keep_review", False):
                 filtered_reviews.append(review_data)
