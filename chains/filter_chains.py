@@ -20,7 +20,7 @@ class DeterministicFilterChain(Chain):
     def output_keys(self) -> List[str]:
         return ["filtered_reviews"]
 
-    def __init__(self, min_words: int = 30, min_playtime: int = 10 * 60):
+    def __init__(self, min_words: int = 5, min_playtime: int = 5 * 60):
         super().__init__(min_words=min_words, min_playtime=min_playtime)
         self.min_words = min_words
         self.min_playtime = min_playtime
