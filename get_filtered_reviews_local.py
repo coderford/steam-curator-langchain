@@ -21,7 +21,7 @@ def main(args):
         num_per_page=args.num_per_page,
         filter=args.filter,
         review_type=args.review_type,
-    )
+    ).get("reviews", [])
 
     deterministic_filter = filter_chains.DeterministicFilterChain()
 
