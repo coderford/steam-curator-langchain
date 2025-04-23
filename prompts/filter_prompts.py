@@ -5,7 +5,6 @@ Here's a few sample genuine reviews. Notice how they reference aspects or featur
 - "It will always be my favorite. But the amount of wall hackers is wild, on the flip side if you're good at swinging you can hit them first. Go kill the cheaters and make them call you one instead. This is the ultimate goal."
 - "Very fun Souls-like with funny and depressing elements. I loved the conversion of real sea creatures into enemies, lots of cool "references and the length of the game is optimal in my eyes."
 
-
 Here's a few sample disingenuous reviews. Notice how they don't reference say anything substantial or identifiable about the game itself:
 - "best fps game exept when a russian guy starts screaming at u for no reason"
 - "best game in the world"
