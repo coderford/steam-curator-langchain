@@ -10,8 +10,8 @@ from langchain_core.runnables import RunnableLambda
 
 import output_parsers
 import steam_utils
-from chains import filter_chains
-from prompts import filter_prompts
+from chains import filter_chains, summarization_chains
+from prompts import filter_prompts, summarization_prompts
 
 
 def main(args):
@@ -35,30 +35,26 @@ def main(args):
 
     remap_output = RunnableLambda(lambda x: {"remapped_reviews": x["filtered_reviews"]})
     remap_input = RunnableLambda(lambda x: {"reviews": x["remapped_reviews"]})
-    complete_filter_chain = deterministic_filter | remap_output | remap_input | llm_filter
 
-    log.info("Filtering reviews...")
-    filter_data = complete_filter_chain.invoke({"reviews": reviews})
-    filtered_reviews = filter_data["filtered_reviews"]
+    summarization_chain = summarization_chains.SummarizationChain(
+        llm,
+        output_parser=output_parsers.SUMMARIZATION_CHAIN_PARSER,
+        prompt_template=summarization_prompts.JUICE_SUMMARIZATION_PROMPT,
+    )
+    complete_chain = deterministic_filter | remap_output | remap_input | llm_filter | summarization_chain
 
-    log.info(f"Kept {len(filtered_reviews)} out of {len(reviews)} reviews")
+    chain_output = complete_chain.invoke({"reviews": reviews})
+    output_file = f"chain_output_{args.app_id}.json"
 
-    original_output_file = f"original_reviews_{args.app_id}.json"
-    filtered_output_file = f"filtered_reviews_{args.app_id}.json"
-
-    log.info(f"Saving filtered review data to {filtered_output_file}")
-    with open(filtered_output_file, "w") as f:
-        json.dump(filtered_reviews, f, indent=4)
+    log.info(f"Saving chain output data to {output_file}")
+    with open(output_file, "w") as f:
+        json.dump(chain_output, f, indent=4)
     
-    log.info(f"Saving original reviews to {original_output_file}")
-    with open(original_output_file, "w") as f:
-        json.dump(reviews, f, indent=4)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Filter reviews")
     parser.add_argument("app_id", type=str, help="Steam app ID")
-    parser.add_argument("--model", type=str, default="gemma3:4b")
+    parser.add_argument("--model", type=str, default="qwen2.5:7b")
     parser.add_argument("--num_reviews", type=int, default=20, help="Number of reviews to filter")
     parser.add_argument("--language", type=str, default="english", help="Language for reviews")
     parser.add_argument("--num_per_page", type=int, default=20, help="Number of reviews per page")
