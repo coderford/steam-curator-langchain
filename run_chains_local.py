@@ -82,7 +82,18 @@ def main(args):
     log.info(f"Saving chain output data to {output_file}")
     with open(output_file, "w") as f:
         json.dump(chain_output, f, indent=4)
-
+    
+    branches = chain_output["branches"]
+    total_score = 0
+    score_breakdown = ""
+    for aspect in branches:
+        aspect_capitalized = aspect.replace("_", " ").capitalize()
+        aspect_score = branches[aspect]['aggregate_score']
+        total_score += aspect_score
+        score_breakdown += f"{aspect_capitalized} ({aspect_score}/10): {branches[aspect]['score_explanation']}\n\n"
+    
+    print(f"\nJUICE SCORE: {total_score}/50\n")
+    print(score_breakdown)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Filter reviews")
