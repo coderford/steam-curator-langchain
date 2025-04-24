@@ -26,9 +26,10 @@ def main(args):
 
     deterministic_filter = filter_chains.DeterministicFilterChain()
 
-    llm = ChatOllama(model=args.model, temperature=0.7)
+    filter_llm = ChatOllama(model=args.filter_model, temperature=0.7)
+    summary_llm = ChatOllama(model=args.summarization_model, temperature=0.7)
     llm_filter = filter_chains.LLMFilterChain(
-        llm,
+        filter_llm,
         output_parser=output_parsers.FILTER_CHAIN_PARSER,
         prompt_template=filter_prompts.FLUFF_FILTER_PROMPT,
     )
@@ -37,8 +38,8 @@ def main(args):
     remap_input = RunnableLambda(lambda x: {"reviews": x["remapped_reviews"]})
 
     summarization_chain = summarization_chains.SummarizationChain(
-        llm,
-        output_parser=output_parsers.SUMMARIZATION_CHAIN_PARSER,
+        summary_llm,
+        output_parser=output_parsers.JUICE_SUMMARIZATION_CHAIN_PARSER,
         prompt_template=summarization_prompts.JUICE_SUMMARIZATION_PROMPT,
     )
     complete_chain = deterministic_filter | remap_output | remap_input | llm_filter | summarization_chain
@@ -54,7 +55,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Filter reviews")
     parser.add_argument("app_id", type=str, help="Steam app ID")
-    parser.add_argument("--model", type=str, default="qwen2.5:7b")
+    parser.add_argument("--filter_model", type=str, default="granite3.3:2b")
+    parser.add_argument("--summarization_model", type=str, default="granite3.3:8b")
     parser.add_argument("--num_reviews", type=int, default=20, help="Number of reviews to filter")
     parser.add_argument("--language", type=str, default="english", help="Language for reviews")
     parser.add_argument("--num_per_page", type=int, default=20, help="Number of reviews per page")
