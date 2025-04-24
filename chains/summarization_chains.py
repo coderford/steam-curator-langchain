@@ -25,7 +25,7 @@ class SummarizationChain(Chain):
         llm: BaseLanguageModel,
         output_parser: StructuredOutputParser,
         prompt_template: str = summarization_prompts.JUICE_SUMMARIZATION_PROMPT,
-        batch_size: int = 8,
+        batch_size: int = 12,
     ):
         super().__init__(
             llm=llm,
@@ -50,5 +50,5 @@ class SummarizationChain(Chain):
             summarization_output = summarization_chain.invoke(
                 {"review_texts": '\n\n'.join([review["review"] for review in review_batch]), "format_instructions": format_instructions}
             )
-            batch_summaries.append(summarization_output.get("summary"))
+            batch_summaries.append(summarization_output)
         return {"batch_summaries": batch_summaries}
