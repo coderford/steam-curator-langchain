@@ -24,7 +24,7 @@ Here are the summaries:
 {format_instructions}
 """,
     "gameplay_mechanics": """
-You are expert at video game reviewing and scoring. Given a set of summaries focussing on gameplay mechanics, you need to provide a score, out of 10 and a detailed explanation for it.
+You are an expert at video game reviewing and scoring. Given a set of summaries focussing on gameplay mechanics, you need to provide a score, out of 10 and a detailed explanation for it.
 
 A score of 10 means that the summaries indicate deeply engaging gameplay mechanics that players found enjoyable for a long time. Note that it doesn't matter if the mechanics are hard-to-learn or execute as long as they are well-though-out and deep. A score of 0 implies that the game has extremely bad gameplay mechanics that almost all players complained about.
 
@@ -36,7 +36,7 @@ Here are the summaries:
 {format_instructions}
 """,
     "artstyle": """
-You are expert at video game reviewing and scoring. Given a set of summaries focussing on art style, you need to provide a score, out of 10 and a detailed explanation for it.
+You are an expert at video game reviewing and scoring. Given a set of summaries focussing on art style, you need to provide a score, out of 10 and a detailed explanation for it.
 A score of 10 means that the game features a unique and cohesive artstyle with a lot of though behind it. A score of 0 implies that the game's artstyle is completely unappealing and unoriginal.
 
 Here are the summaries:
@@ -47,7 +47,7 @@ Here are the summaries:
 {format_instructions}
 """,
     "emotional_engagement": """
-You are expert at video game reviewing and scoring. Given a set of summaries focussing on emotional engagement, you need to provide a score, out of 10 and a detailed explanation for it.
+You are an expert at video game reviewing and scoring. Given a set of summaries focussing on emotional engagement, you need to provide a score, out of 10 and a detailed explanation for it.
 A score of 10 means that the game has a realistic, mature way of dealing with emotional themes, features strongly written and complex characters and tends to elicit strong emotional responses and attachment from players. A score of 0 implies that either the game does not feature any emotional depth at all or that it relies too much on cliches, stereotypes and trivial emotions, without actually putting in the work to make the player feel something.
 
 Here are the summaries:
@@ -56,7 +56,21 @@ Here are the summaries:
 ```
 
 {format_instructions}
-"""
+""",
+    "bloat_repetitiveness_tediousness": """
+You are an expert at video game reviewing and scoring. Given a set of summaries focussing on bloat/repetitiveness/tediousness, you need to provide a score, out of 10 and a detailed explanation for it.
+- A score of 10 means that game offers an incredibly focussed experience pretty much never wastes the player's time with repetitive or tedious objectives and encounters. Note that repetitiveness/monotonicity due to challenging gameplay should be ignored and must not be penalized. A game in which repetitiveness only occurs due to challenging gameplay or voluntary repeated playthroughs should get a score of 9 or more.
+- A score of 0 implies that the game is so rife with bloat, repetitive encounters and tedious mechanics that almost all players complain about it and don't enjoy the game because of it. Grindy games must be penalized heavily (score ~5). Repetitive side missions must also be penalized heavily (Score ~5).
+
+DO NOT MENTION OR SCORE BASED ON THE OVERALL ASSESSMENT OF THE GAME. FOCUS ON THE BLOAT/REPETITIVENESS ONLY.
+
+Here are the summaries:
+```
+{summary_texts}
+```
+
+{format_instructions}
+""",
 }
 
 BLURB_PROMPT = """

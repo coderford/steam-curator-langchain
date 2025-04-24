@@ -48,7 +48,7 @@ def get_filter_chain(model, temperature=0.0):
     return filter_chain
 
 
-def get_summarization_chain(model, temperature=0.7):
+def get_summarization_chain(model, temperature=0.0):
     summary_llm = ChatOllama(model=model, temperature=temperature)
     summarization_chain = summarization_chains.SummarizationChain(
         summary_llm,
@@ -58,7 +58,7 @@ def get_summarization_chain(model, temperature=0.7):
     return summarization_chain
 
 
-def get_aggregation_chain(model, temperature=0.7):
+def get_aggregation_chain(model, temperature=0.0):
     aggregation_llm = ChatOllama(model=model, temperature=temperature)
     aspects = list(aggregation_prompts.JUICE_AGGREGATION_PROMPTS.keys())
     aggregation_branches = {}
