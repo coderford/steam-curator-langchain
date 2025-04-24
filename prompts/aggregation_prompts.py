@@ -58,3 +58,14 @@ Here are the summaries:
 {format_instructions}
 """
 }
+
+BLURB_PROMPT = """
+You are an expert blurb writer. Give a review with game scores, summarize the review into a short blurb (~50 words). No need to mention any of the scores.
+
+Here is the review:
+```
+{review_text}
+```
+
+Output only the blurb text, nothing else.
+"""

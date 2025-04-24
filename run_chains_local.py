@@ -8,6 +8,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 from langchain_community.cache import SQLiteCache
 from langchain_core.runnables import RunnableLambda, RunnableParallel
+from langchain_core.output_parsers.string import StrOutputParser
 
 import output_parsers
 import steam_utils
@@ -15,7 +16,22 @@ from chains import filter_chains, summarization_chains, aggregation_chains
 from prompts import filter_prompts, summarization_prompts, aggregation_prompts
 
 
-def get_filter_chain(model, temperature=0.7):
+class OverwriteSQLiteCache(SQLiteCache):
+    def lookup(self, prompt: str, llm_string):
+        # Always return None to force recompute
+        return None
+
+
+def get_blurb(review_text, model='gemma3:4b'):
+    blurb_prompt = ChatPromptTemplate.from_template(aggregation_prompts.BLURB_PROMPT)
+    llm = ChatOllama(model=model, temperature=0.0)
+
+    chain = blurb_prompt | llm | StrOutputParser()
+    output = chain.invoke({"review_text": review_text})
+    return output
+
+
+def get_filter_chain(model, temperature=0.0):
     deterministic_filter = filter_chains.DeterministicFilterChain()
 
     filter_llm = ChatOllama(model=model, temperature=temperature)
@@ -79,21 +95,32 @@ def main(args):
     chain_output = complete_chain.invoke({"reviews": reviews})
     output_file = f"chain_output_{args.app_id}.json"
 
+    branches = chain_output["branches"]
+    total_score = 0
+    score_breakdown_text = ""
+    for aspect in branches:
+        aspect_capitalized = aspect.replace("_", " ").capitalize()
+        aspect_score = branches[aspect]["aggregate_score"]
+        total_score += aspect_score
+        score_breakdown_text += f"{aspect_capitalized} ({aspect_score}/10): {branches[aspect]['score_explanation']}\n\n"
+    final_score = total_score / len(branches.keys())
+
+    blurb = get_blurb(score_breakdown_text)
+    blurb = f"JUICE Score: {final_score:.1f}. {blurb}"
+    chain_output["final_score"] = final_score
+    chain_output["score_breakdown_text"] = score_breakdown_text
+    chain_output["blurb"] = blurb
+
     log.info(f"Saving chain output data to {output_file}")
     with open(output_file, "w") as f:
         json.dump(chain_output, f, indent=4)
-    
-    branches = chain_output["branches"]
-    total_score = 0
-    score_breakdown = ""
-    for aspect in branches:
-        aspect_capitalized = aspect.replace("_", " ").capitalize()
-        aspect_score = branches[aspect]['aggregate_score']
-        total_score += aspect_score
-        score_breakdown += f"{aspect_capitalized} ({aspect_score}/10): {branches[aspect]['score_explanation']}\n\n"
-    
-    print(f"\nJUICE SCORE: {total_score}/50\n")
-    print(score_breakdown)
+
+    print(f"\nJUICE SCORE: {final_score:.1f}/10\n")
+    print(score_breakdown_text)
+    print("Blurb Version")
+    print("-------------")
+    print(blurb)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Filter reviews")
@@ -101,9 +128,9 @@ if __name__ == "__main__":
     parser.add_argument("--filter_model", type=str, default="gemma3:4b")
     parser.add_argument("--summarization_model", type=str, default="qwen2.5:7b")
     parser.add_argument("--aggregation_model", type=str, default="qwen2.5:7b")
-    parser.add_argument("--num_reviews", type=int, default=20, help="Number of reviews to filter")
+    parser.add_argument("--num_reviews", type=int, default=200, help="Number of reviews to filter")
     parser.add_argument("--language", type=str, default="english", help="Language for reviews")
-    parser.add_argument("--num_per_page", type=int, default=20, help="Number of reviews per page")
+    parser.add_argument("--num_per_page", type=int, default=100, help="Number of reviews per page")
     parser.add_argument("--filter", type=str, default="recent", help="Filter for reviews. Can be 'all' or 'recent'.")
     parser.add_argument(
         "--review_type", type=str, default="all", help="Review type. Can be 'positive', 'negative' or 'all'."
@@ -111,10 +138,16 @@ if __name__ == "__main__":
     parser.add_argument("--verbose", action="store_true", help="Verbose mode")
     parser.add_argument("--debug", action="store_true", help="Debug mode")
     parser.add_argument("--skip_cache", action="store_true", help="Skip caching local db")
+    parser.add_argument(
+        "--overwrite_cache", action="store_true", help="Overwrite cache instead of using it for lookups"
+    )
     args = parser.parse_args()
 
     set_verbose(args.verbose)
     set_debug(args.debug)
     if not args.skip_cache:
-        set_llm_cache(SQLiteCache(database_path=".langchain_cache.db"))
+        if not args.overwrite_cache:
+            set_llm_cache(SQLiteCache(database_path=".langchain_cache.db"))
+        else:
+            set_llm_cache(OverwriteSQLiteCache(database_path=".langchain_cache.db"))
     main(args)
