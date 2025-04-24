@@ -25,7 +25,7 @@ JUICE_SUMMARIZATION_CHAIN_SCHEMAS = [
         description="Based on the reviews, do you think the game sports an impressive and/or cohesive art style? Do reviewers mention or seem particularly impressed with artistic choices in the game's art style?"
     ),
     ResponseSchema(
-        name="emotional_maturity",
+        name="emotional_engagement",
         description="Based on the reviews, does the game seem to have real, mature emotional depth, or is it just common tropes used to touch heartstrings? Or does it not have much to do with emotions at all? Do reviewers at all describe the game as emotionally mature and mention specific scenes that are emotionally impactful? Are there mentions of strongly written and complex characters?"
     ),
 ]

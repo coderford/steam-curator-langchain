@@ -5,7 +5,7 @@ You are an expert at scrutinizing, evaluating summarizing video-game reviews. Gi
 - Exploration
 - Gameplay mechanics
 - Artstyle
-- Emotional Maturity
+- Emotional Engagement
 
 ## Notes
 - Difficulty is never a negative. 

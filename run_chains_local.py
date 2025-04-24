@@ -56,8 +56,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Filter reviews")
     parser.add_argument("app_id", type=str, help="Steam app ID")
-    parser.add_argument("--filter_model", type=str, default="granite3.3:2b")
-    parser.add_argument("--summarization_model", type=str, default="granite3.3:8b")
+    parser.add_argument("--filter_model", type=str, default="gemma3:4b")
+    parser.add_argument("--summarization_model", type=str, default="qwen2.5:7b")
     parser.add_argument("--num_reviews", type=int, default=20, help="Number of reviews to filter")
     parser.add_argument("--language", type=str, default="english", help="Language for reviews")
     parser.add_argument("--num_per_page", type=int, default=20, help="Number of reviews per page")
@@ -73,5 +73,5 @@ if __name__ == "__main__":
     set_verbose(args.verbose)
     set_debug(args.debug)
     if not args.skip_cache:
-        set_llm_cache(SQLiteCache(database_path=".langchain.db"))
+        set_llm_cache(SQLiteCache(database_path=".langchain_cache.db"))
     main(args)
