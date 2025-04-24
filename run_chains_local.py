@@ -3,9 +3,10 @@ import json
 
 import glog as log
 from langchain.chains.sequential import SequentialChain
-from langchain.globals import set_verbose, set_debug
+from langchain.globals import set_verbose, set_debug, set_llm_cache
 from langchain.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
+from langchain_community.cache import SQLiteCache
 from langchain_core.runnables import RunnableLambda
 
 import output_parsers
@@ -66,8 +67,11 @@ if __name__ == "__main__":
     )
     parser.add_argument("--verbose", action="store_true", help="Verbose mode")
     parser.add_argument("--debug", action="store_true", help="Debug mode")
+    parser.add_argument("--skip_cache", action="store_true", help="Skip caching local db")
     args = parser.parse_args()
 
     set_verbose(args.verbose)
     set_debug(args.debug)
+    if not args.skip_cache:
+        set_llm_cache(SQLiteCache(database_path=".langchain.db"))
     main(args)
