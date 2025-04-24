@@ -30,3 +30,17 @@ JUICE_SUMMARIZATION_CHAIN_SCHEMAS = [
     ),
 ]
 JUICE_SUMMARIZATION_CHAIN_PARSER = StructuredOutputParser.from_response_schemas(JUICE_SUMMARIZATION_CHAIN_SCHEMAS)
+
+JUICE_AGGREGATION_CHAIN_SCHEMAS = [
+    ResponseSchema(
+        name="aggregate_score",
+        type="integer",
+        description="Aggregate score out of 10, as per the instructions"
+    ),
+    ResponseSchema(
+        name="score_explanation",
+        type="string",
+        description="Detailed explanation for the aggregate score"
+    )
+]
+JUICE_AGGREGATION_CHAIN_PARSER = StructuredOutputParser.from_response_schemas(JUICE_AGGREGATION_CHAIN_SCHEMAS)
