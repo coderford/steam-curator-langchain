@@ -9,6 +9,7 @@ from langchain_ollama import ChatOllama
 from langchain_community.cache import SQLiteCache
 from langchain_core.runnables import RunnableLambda, RunnableParallel
 from langchain_core.output_parsers.string import StrOutputParser
+from langchain_core.exceptions import OutputParserException
 
 import output_parsers
 import steam_utils
@@ -70,7 +71,7 @@ def get_aggregation_chain(model, temperature=0.0):
             aggregation_llm,
             output_parser=output_parsers.JUICE_AGGREGATION_CHAIN_PARSER,
             prompt_template=aggregation_prompts.JUICE_AGGREGATION_PROMPTS[aspect],
-        )
+        ).with_retry(stop_after_attempt=3, retry_if_exception_type=[OutputParserException])
         aggregation_branches[aspect] = remap_input | chain
 
     aggregation_chain = RunnableParallel(branches=aggregation_branches)
@@ -92,7 +93,13 @@ def main(args):
     aggregation_chain = get_aggregation_chain(args.aggregation_model)
     complete_chain = filter_chain | summarization_chain | aggregation_chain
 
-    chain_output = complete_chain.invoke({"reviews": reviews})
+    try:
+        chain_output = complete_chain.invoke({"reviews": reviews})
+    except OutputParserException as e:
+        raw = getattr(e, "parsing_text", e.args[1] if len(e.args) > 1 else None)
+        print("❗️ Failed to parse JSON. Raw LLM output was:\n", raw)
+        raise
+
     output_file = f"chain_output_{args.app_id}.json"
 
     branches = chain_output["branches"]
