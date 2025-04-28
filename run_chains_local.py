@@ -125,9 +125,9 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Filter reviews")
     parser.add_argument("app_id", type=str, help="Steam app ID")
-    parser.add_argument("--filter_model", type=str, default="gemma3:4b")
-    parser.add_argument("--summarization_model", type=str, default="qwen2.5:7b")
-    parser.add_argument("--aggregation_model", type=str, default="qwen2.5:7b")
+    parser.add_argument("--filter_model", type=str, default="qwen2.5-coder:7b")
+    parser.add_argument("--summarization_model", type=str, default="granite3.3:8b")
+    parser.add_argument("--aggregation_model", type=str, default="gemma3:12b")
     parser.add_argument("--num_reviews", type=int, default=200, help="Number of reviews to filter")
     parser.add_argument("--language", type=str, default="english", help="Language for reviews")
     parser.add_argument("--num_per_page", type=int, default=100, help="Number of reviews per page")

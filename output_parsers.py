@@ -18,19 +18,19 @@ JUICE_SUMMARIZATION_CHAIN_SCHEMAS = [
     ),
     ResponseSchema(
         name="gameplay_mechanics",
-        description="Based on the reviews, how would you best describe gameplay mechanics of the game? Do reviewers make note of specific mechanics they are impressed by?"
+        description="Based on the reviews, how would you best describe gameplay mechanics of the game? Do reviewers make note of specific mechanics they are impressed by? Does at least some reviewer call the gameplay mechanics 'deep' and 'complex'?"
     ),
-    ResponseSchema(
-        name="artstyle",
-        description="Based on the reviews, do you think the game sports an impressive and/or cohesive art style? Do reviewers mention or seem particularly impressed with artistic choices in the game's art style?"
-    ),
+    # ResponseSchema(
+    #     name="artstyle",
+    #     description="Based on the reviews, do you think the game sports an impressive and/or cohesive art style? Do reviewers mention or seem particularly impressed with artistic choices in the game's art style?"
+    # ),
     ResponseSchema(
         name="emotional_engagement",
         description="Based on the reviews, does the game seem to have real, mature emotional depth, or is it just common tropes used to touch heartstrings? Or does it not have much to do with emotions at all? Do reviewers at all describe the game as emotionally mature and mention specific scenes that are emotionally impactful? Are there mentions of strongly written and complex characters?"
     ),
     ResponseSchema(
-        name="bloat_repetitiveness_tediousness",
-        description="Based on the reviews, does the game have a lot of bloat, repetitive encounters and tedious mechanics? Do reviewers mention grindiness or repetitive missions? Ignore and DO NOT MENTION cases of repetitiveness due to challenging gameplay or repeated playthroughs."
+        name="bloat_grinding",
+        description="Based on the reviews, does the game have a lot of bloat and grindy mechanics/encounters? Do reviewers mention bloat or grindiness? Ignore and DO NOT MENTION cases of repetitiveness due to challenging gameplay or repeated playthroughs."
     ),
 ]
 JUICE_SUMMARIZATION_CHAIN_PARSER = StructuredOutputParser.from_response_schemas(JUICE_SUMMARIZATION_CHAIN_SCHEMAS)
