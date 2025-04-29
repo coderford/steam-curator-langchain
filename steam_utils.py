@@ -92,14 +92,17 @@ def get_user_reviews(app_id, language="english", num_per_page=20, filter="recent
                 }
 
         except requests.exceptions.HTTPError as e:
-            log.error(f"HTTP error occurred: {e}")
-            return user_reviews
+            log.exception(f"HTTP error occurred: {e}")
+            log.info(f"Fetched {len(user_reviews)} reviews...")
+            return { "query_summary": {}, "reviews": user_reviews }
         except json.JSONDecodeError as e:
-            log.error(f"JSON decoding error occurred: {e}")
-            return user_reviews
+            log.exception(f"JSON decoding error occurred: {e}")
+            log.info(f"Fetched {len(user_reviews)} reviews...")
+            return { "query_summary": {}, "reviews": user_reviews }
         except Exception as e:
-            log.error(f"An unexpected error occurred: {e}")
-            return user_reviews
+            log.exception(f"An unexpected error occurred: {e}")
+            log.info(f"Fetched {len(user_reviews)} reviews...")
+            return { "query_summary": {}, "reviews": user_reviews }
 
         if len(response_json["reviews"]) > 0:
             log.info(f"Fetched {len(user_reviews)} reviews so far...")
