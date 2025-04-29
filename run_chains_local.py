@@ -23,7 +23,7 @@ class OverwriteSQLiteCache(SQLiteCache):
         return None
 
 
-def get_blurb(review_text, model='gemma3:4b'):
+def get_blurb(review_text, model='qwen2.5:7b'):
     blurb_prompt = ChatPromptTemplate.from_template(aggregation_prompts.BLURB_PROMPT)
     llm = ChatOllama(model=model, temperature=0.0)
 
@@ -96,7 +96,7 @@ def main(args):
     try:
         chain_output = complete_chain.invoke({"reviews": reviews})
     except OutputParserException as e:
-        raw = getattr(e, "parsing_text", e.args[1] if len(e.args) > 1 else None)
+        raw = getattr(e, "llm_output", e.args[1] if len(e.args) > 1 else None)
         print("❗️ Failed to parse JSON. Raw LLM output was:\n", raw)
         raise
 
@@ -112,7 +112,7 @@ def main(args):
         score_breakdown_text += f"{aspect_capitalized} ({aspect_score}/10): {branches[aspect]['score_explanation']}\n\n"
     final_score = total_score / len(branches.keys())
 
-    blurb = get_blurb(score_breakdown_text)
+    blurb = get_blurb(score_breakdown_text, model=args.blurb_model)
     blurb = f"JUICE Score: {final_score:.1f}. {blurb}"
     chain_output["final_score"] = final_score
     chain_output["score_breakdown_text"] = score_breakdown_text
@@ -135,6 +135,7 @@ if __name__ == "__main__":
     parser.add_argument("--filter_model", type=str, default="qwen2.5-coder:7b")
     parser.add_argument("--summarization_model", type=str, default="granite3.3:8b")
     parser.add_argument("--aggregation_model", type=str, default="gemma3:12b")
+    parser.add_argument("--blurb_model", type=str, default="qwen2.5:7b")
     parser.add_argument("--num_reviews", type=int, default=200, help="Number of reviews to filter")
     parser.add_argument("--language", type=str, default="english", help="Language for reviews")
     parser.add_argument("--num_per_page", type=int, default=100, help="Number of reviews per page")

@@ -12,6 +12,8 @@ Here are the summaries:
 ```
 
 {format_instructions}
+
+Output a properly formatted json as described above. Don't forget to include commas after each property.
 """,
     "exploration": """
 You are an expert at video game reviewing and scoring. Given a set of summaries focussing on exploration, you need to provide a score, out of 10 and a detailed explanation for it.
@@ -26,6 +28,8 @@ Here are the summaries:
 ```
 
 {format_instructions}
+
+Output a properly formatted json as described above. Don't forget to include commas after each property.
 """,
     "gameplay_mechanics": """
 You are an expert at video game reviewing and scoring. Given a set of summaries focussing on gameplay mechanics, you need to provide a score, out of 10 and a detailed explanation for it.
@@ -40,6 +44,8 @@ Here are the summaries:
 ```
 
 {format_instructions}
+
+Output a properly formatted json as described above. Don't forget to include commas after each property.
 """,
 #     "artstyle": """
 # You are an expert at video game reviewing and scoring. Given a set of summaries focussing on art style, you need to provide a score, out of 10 and a detailed explanation for it.
@@ -65,6 +71,8 @@ Here are the summaries:
 ```
 
 {format_instructions}
+
+Output a properly formatted json as described above. Don't forget to include commas after each property.
 """,
     "bloat_grinding": """
 You are an expert at video game reviewing and scoring. Given a set of summaries focussing on bloat/repetitiveness/tediousness, you need to provide a score out of 10 and a detailed explanation for it.
@@ -79,6 +87,8 @@ Here are the summaries:
 ```
 
 {format_instructions}
+
+Output a properly formatted json as described above. Don't forget to include commas after each property.
 """,
 }
 
