@@ -1,16 +1,23 @@
 from langchain.chains.sequential import SequentialChain
 from langchain.prompts import ChatPromptTemplate
-from langchain_ollama import ChatOllama
 from langchain_core.runnables import RunnableLambda, RunnableParallel
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.exceptions import OutputParserException
 
 import output_parsers
+import model_registry
 from chains import filter_chains, summarization_chains, aggregation_chains
 from prompts import filter_prompts, summarization_prompts, aggregation_prompts
 
 
-def get_blurb(review_text, model="qwen2.5:7b"):
+def get_language_model(model, temperature=0.0):
+    LLMClass = model_registry.LLM_CLASS_MAP.get(model)
+    if LLMClass is None:
+        raise ValueError(f"Unrecognized language model: {model}")
+    return LLMClass(model=model, temperature=temperature)
+
+
+def get_blurb(review_text, model="qwen2.5:7b", temperature=0.0):
     """
     Generates a blurb for a given review text using the specified language model.
 
@@ -22,7 +29,7 @@ def get_blurb(review_text, model="qwen2.5:7b"):
         str: The generated blurb.
     """
     blurb_prompt = ChatPromptTemplate.from_template(aggregation_prompts.BLURB_PROMPT)
-    llm = ChatOllama(model=model, temperature=0.0)
+    llm = get_language_model(model=model, temperature=temperature)
 
     chain = blurb_prompt | llm | StrOutputParser()
     output = chain.invoke({"review_text": review_text})
@@ -42,7 +49,7 @@ def get_filter_chain(model, temperature=0.0):
     """
     deterministic_filter = filter_chains.DeterministicFilterChain()
 
-    filter_llm = ChatOllama(model=model, temperature=temperature)
+    filter_llm = get_language_model(model=model, temperature=temperature)
     llm_filter = filter_chains.LLMFilterChain(
         filter_llm,
         output_parser=output_parsers.FILTER_CHAIN_PARSER,
@@ -67,7 +74,7 @@ def get_summarization_chain(model, temperature=0.0, batch_size=12):
     Returns:
         Chain: A LangChain chain that performs LLM-based summarization of reviews.
     """
-    summary_llm = ChatOllama(model=model, temperature=temperature)
+    summary_llm = get_language_model(model=model, temperature=temperature)
     summarization_chain = summarization_chains.SummarizationChain(
         summary_llm,
         output_parser=output_parsers.JUICE_SUMMARIZATION_CHAIN_PARSER,
@@ -88,7 +95,7 @@ def get_aggregation_chain(model, temperature=0.0):
     Returns:
         Chain: A LangChain chain that performs LLM-based aggregation of review summaries and output parsing.
     """
-    aggregation_llm = ChatOllama(model=model, temperature=temperature)
+    aggregation_llm = get_language_model(model=model, temperature=temperature)
     aspects = list(aggregation_prompts.JUICE_AGGREGATION_PROMPTS.keys())
     aggregation_branches = {}
     for aspect in aspects:
@@ -111,6 +118,7 @@ def make_complete_chain(
     summarization_model="qwen2.5:7b",
     aggregation_model="gemma3:12b",
     summarization_batch_size=12,
+    temperature=0.0,
 ):
     """
     Creates a complete chain that filters, summarizes, and aggregates reviews using specified language models.
@@ -123,8 +131,8 @@ def make_complete_chain(
     Returns:
         Chain: A LangChain chain that filters, summarizes, and aggregates reviews based on the specified models.
     """
-    filter_chain = get_filter_chain(filter_model)
-    summarization_chain = get_summarization_chain(summarization_model, batch_size=summarization_batch_size)
-    aggregation_chain = get_aggregation_chain(aggregation_model)
+    filter_chain = get_filter_chain(filter_model, temperature=temperature)
+    summarization_chain = get_summarization_chain(summarization_model, temperature=temperature, batch_size=summarization_batch_size)
+    aggregation_chain = get_aggregation_chain(aggregation_model, temperature=temperature)
     complete_chain = filter_chain | summarization_chain | aggregation_chain
     return complete_chain
