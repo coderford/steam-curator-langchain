@@ -73,7 +73,7 @@ def get_filter_chain(model, temperature=0.0):
     return filter_chain
 
 
-def get_summarization_chain(model, temperature=0.0):
+def get_summarization_chain(model, temperature=0.0, batch_size=12):
     """
     Creates a summarization chain to generate summaries of the filtered reviews.
 
@@ -89,6 +89,7 @@ def get_summarization_chain(model, temperature=0.0):
         summary_llm,
         output_parser=output_parsers.JUICE_SUMMARIZATION_CHAIN_PARSER,
         prompt_template=summarization_prompts.JUICE_SUMMARIZATION_PROMPT,
+        batch_size=batch_size,
     )
     return summarization_chain
 
@@ -122,7 +123,7 @@ def get_aggregation_chain(model, temperature=0.0):
     return aggregation_chain
 
 
-def make_complete_chain(filter_model="gemma3:4b", summarization_model="qwen2.5:7b", aggregation_model="gemma3:12b"):
+def make_complete_chain(filter_model="gemma3:4b", summarization_model="qwen2.5:7b", aggregation_model="gemma3:12b", summarization_batch_size=12):
     """
     Creates a complete chain that filters, summarizes, and aggregates reviews using specified language models.
 
@@ -135,7 +136,7 @@ def make_complete_chain(filter_model="gemma3:4b", summarization_model="qwen2.5:7
         Chain: A LangChain chain that filters, summarizes, and aggregates reviews based on the specified models.
     """
     filter_chain = get_filter_chain(filter_model)
-    summarization_chain = get_summarization_chain(summarization_model)
+    summarization_chain = get_summarization_chain(summarization_model, batch_size=summarization_batch_size)
     aggregation_chain = get_aggregation_chain(aggregation_model)
     complete_chain = filter_chain | summarization_chain | aggregation_chain
     return complete_chain
@@ -149,6 +150,7 @@ def run_for_app_id(
     language="english",
     review_filter="recent",
     review_type="all",
+    allow_other_languages=True,
 ):
     reviews = steam_utils.get_user_reviews(
         app_id,
@@ -158,6 +160,17 @@ def run_for_app_id(
         filter=review_filter,
         review_type=review_type,
     ).get("reviews", [])
+
+    # if number of reviews is < num_revies, try with languages = 'all'
+    if len(reviews) < num_reviews and allow_other_languages:
+        reviews = steam_utils.get_user_reviews(
+            app_id,
+            limit=num_reviews,
+            num_per_page=num_per_page,
+            language="all",
+            filter=review_filter,
+            review_type=review_type,
+        ).get("reviews", [])
 
     try:
         chain_output = complete_chain.invoke({"reviews": reviews})
@@ -189,6 +202,7 @@ def main(args):
         filter_model=args.filter_model,
         summarization_model=args.summarization_model,
         aggregation_model=args.aggregation_model,
+        summarization_batch_size=args.summarization_batch_size,
     )
 
     if args.app_id:
@@ -198,13 +212,21 @@ def main(args):
         output_file = f"chain_outputs/chain_output_{args.app_id}_{name_clean}.json"
         os.makedirs("chain_outputs/", exist_ok=True)
 
-        chain_output = run_for_app_id(app_id, complete_chain)
+        chain_output = run_for_app_id(
+            args.app_id,
+            complete_chain,
+            num_reviews=args.num_reviews,
+            num_per_page=args.num_per_page,
+            language=args.language,
+            review_filter=args.filter,
+            review_type=args.review_type,
+        )
 
         log.info(f"Saving chain output data to {output_file}")
         with open(output_file, "w") as f:
             json.dump(chain_output, f, indent=4)
 
-        print(f"\nJUICE SCORE: {final_score:.1f}/10\n")
+        print(f"\nJUICE SCORE: {chain_output['final_score']:.1f}/10\n")
         print(chain_output["score_breakdown_text"])
         print("Blurb Version")
         print("-------------")
@@ -277,6 +299,7 @@ if __name__ == "__main__":
     me_group.add_argument("--run_for_file", type=str, help="Path to file containing list of app IDs")
     parser.add_argument("--filter_model", type=str, default="qwen2.5-coder:7b")
     parser.add_argument("--summarization_model", type=str, default="granite3.3:8b")
+    parser.add_argument("--summarization_batch_size", type=int, default=12)
     parser.add_argument("--aggregation_model", type=str, default="gemma3:12b")
     parser.add_argument("--blurb_model", type=str, default="qwen2.5:7b")
     parser.add_argument("--num_reviews", type=int, default=200, help="Number of reviews to filter")
