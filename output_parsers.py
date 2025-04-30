@@ -3,27 +3,22 @@ from langchain.output_parsers import ResponseSchema
 
 
 class ThinkingStructuredOutputParser(StructuredOutputParser):
-    open_tag: str
-    close_tag: str
+    thinking_close_tag: str
 
     @property
     def _type(self) -> str:
         return "thinking_structured_output_parser"
 
-    def __init__(self, open_tag="<think>", close_tag="</think>", response_schemas=None):
-        super().__init__(open_tag=open_tag, close_tag=close_tag, response_schemas=response_schemas)
-        self.open_tag = open_tag
-        self.close_tag = close_tag
+    def __init__(self, thinking_close_tag="</think>", response_schemas=None):
+        super().__init__(thinking_close_tag=thinking_close_tag, response_schemas=response_schemas)
+        self.thinking_close_tag = thinking_close_tag
     
     def _remove_thinking_tokens(self, text: str) -> str:
         # Remove thinking tokens from
         cleaned_text = text.strip()
-        start = text.find(self.open_tag)
-        end = text.find(self.close_tag)
-        if start != -1 and end != -1:
-            ret = cleaned_text[:start]
-            ret += cleaned_text[end + len(self.close_tag) :]
-            return cleaned_text
+        end_pos = text.find(self.thinking_close_tag)
+        if end_pos != -1:
+            return cleaned_text[end_pos + len(self.thinking_close_tag) :].strip()
         return cleaned_text
 
     def parse(self, text: str) -> str:
