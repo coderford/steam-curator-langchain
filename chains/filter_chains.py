@@ -82,11 +82,17 @@ class LLMFilterChain(Chain):
         filter_chain = prompt | self.llm | self.output_parser
 
         filtered_reviews = []
+        batch_inputs = []
 
         for review_data in reviews:
-            filter_output = filter_chain.invoke(
+            batch_inputs.append(
                 {"review_text": review_data["review"], "format_instructions": format_instructions}
             )
-            if filter_output.get("keep_review", False):
+
+        outputs = filter_chain.batch(batch_inputs)
+        assert len(outputs) == len(reviews)
+        for review_data, output in zip(reviews, outputs):
+            if output.get("keep_review", True):
                 filtered_reviews.append(review_data)
+
         return {"filtered_reviews": filtered_reviews}
