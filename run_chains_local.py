@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 import chain_utils
 import steam_utils
+from prompts import aggregation_prompts
 
 
 class OverwriteSQLiteCache(SQLiteCache):
@@ -160,7 +161,7 @@ def main(args):
                     review_type=args.review_type,
                 )
             except Exception as e:
-                log.exception(f"Error running chain for app_id={args.app_id}: {e}")
+                log.exception(f"Error running chain for app_id={app_id}: {e}")
                 log.info(f"Skipping {app_id} due to error")
                 continue
             datapoint = [
@@ -189,12 +190,12 @@ if __name__ == "__main__":
     me_group = parser.add_mutually_exclusive_group(required=True)
     me_group.add_argument("--app_id", type=str, help="Steam app ID")
     me_group.add_argument("--run_for_file", type=str, help="Path to file containing list of app IDs")
-    parser.add_argument("--filter_model", type=str, default="gemma3:4b")
-    parser.add_argument("--summarization_model", type=str, default="granite3.3:8b")
-    parser.add_argument("--summarization_batch_size", type=int, default=12)
+    parser.add_argument("--filter_model", type=str, default="qwen3:4b")
+    parser.add_argument("--summarization_model", type=str, default="gemma3:12b")
+    parser.add_argument("--summarization_batch_size", type=int, default=20, help="Batch size for summarization chain")
     parser.add_argument("--aggregation_model", type=str, default="gemma3:12b")
-    parser.add_argument("--blurb_model", type=str, default="qwen2.5:7b")
-    parser.add_argument("--num_reviews", type=int, default=500, help="Number of reviews to filter")
+    parser.add_argument("--blurb_model", type=str, default="gemma3:12b")
+    parser.add_argument("--num_reviews", type=int, default=400, help="Number of reviews to filter")
     parser.add_argument("--language", type=str, default="english", help="Language for reviews")
     parser.add_argument("--num_per_page", type=int, default=100, help="Number of reviews per page")
     parser.add_argument("--filter", type=str, default="recent", help="Filter for reviews. Can be 'all' or 'recent'.")
