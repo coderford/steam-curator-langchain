@@ -10,14 +10,14 @@ from chains import filter_chains, summarization_chains, aggregation_chains
 from prompts import filter_prompts, summarization_prompts, aggregation_prompts
 
 
-def get_language_model(model, temperature=0.0):
+def get_language_model(model, temperature=0.7):
     LLMClass = model_registry.LLM_CLASS_MAP.get(model)
     if LLMClass is None:
         raise ValueError(f"Unrecognized language model: {model}")
     return LLMClass(model=model, temperature=temperature)
 
 
-def get_blurb(review_text, model="qwen2.5:7b", temperature=0.0):
+def get_blurb(review_text, model="qwen2.5:7b", temperature=0.7):
     """
     Generates a blurb for a given review text using the specified language model.
 
@@ -36,7 +36,7 @@ def get_blurb(review_text, model="qwen2.5:7b", temperature=0.0):
     return output
 
 
-def get_filter_chain(model, temperature=0.0):
+def get_filter_chain(model, temperature=0.7):
     """
     Creates a filter chain to determine whether reviews should be included based on certain criteria.
 
@@ -63,7 +63,7 @@ def get_filter_chain(model, temperature=0.0):
     return filter_chain
 
 
-def get_summarization_chain(model, temperature=0.0, batch_size=12):
+def get_summarization_chain(model, temperature=0.7, batch_size=12):
     """
     Creates a summarization chain to generate summaries of the filtered reviews.
 
@@ -84,7 +84,7 @@ def get_summarization_chain(model, temperature=0.0, batch_size=12):
     return summarization_chain
 
 
-def get_aggregation_chain(model, temperature=0.0):
+def get_aggregation_chain(model, temperature=0.7, num_retries=2):
     """
     Creates an aggregation chain to generate summaries of the filtered reviews for each aspect.
 
@@ -106,7 +106,7 @@ def get_aggregation_chain(model, temperature=0.0):
             aggregation_llm,
             output_parser=output_parsers.JUICE_AGGREGATION_CHAIN_PARSER,
             prompt_template=aggregation_prompts.JUICE_AGGREGATION_PROMPTS[aspect],
-        ).with_retry(stop_after_attempt=3, retry_if_exception_type=[OutputParserException])
+        ).with_retry(stop_after_attempt=num_retries, retry_if_exception_type=[OutputParserException])
         aggregation_branches[aspect] = remap_input | chain
 
     aggregation_chain = RunnableParallel(branches=aggregation_branches)
