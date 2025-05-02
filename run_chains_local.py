@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import time
 from datetime import datetime
 
 import pandas as pd
@@ -39,16 +40,18 @@ def _get_reviews(
         review_type=review_type,
     ).get("reviews", [])
 
-    # if number of reviews is < num_revies, try with languages = 'all'
+    # if number of reviews is < num_revies, try to get rest with languages = 'all'
     if len(reviews) < num_reviews and allow_other_languages:
-        reviews = steam_utils.get_user_reviews(
+        log.info(f"Couldn't get enough reviews in {language}, trying to get the rest with all languages")
+        remainder_reviews = steam_utils.get_user_reviews(
             app_id,
-            limit=num_reviews,
-            num_per_page=num_per_page,
+            limit=num_reviews - len(reviews),
+            num_per_page=min(num_reviews - len(reviews), num_per_page),
             language="all",
             filter=review_filter,
             review_type=review_type,
         ).get("reviews", [])
+        reviews.extend(remainder_reviews[:num_reviews - len(reviews)])
     return reviews
 
 
@@ -127,6 +130,7 @@ def main(args):
         output_file = f"chain_outputs/chain_output_{args.app_id}_{name_clean}.json"
         os.makedirs("chain_outputs/", exist_ok=True)
 
+        start_time = time.time()
         chain_output = run_for_app_id(
             args.app_id,
             complete_chain,
@@ -136,6 +140,7 @@ def main(args):
             review_filter=args.filter,
             review_type=args.review_type,
         )
+        log.info(f"Took {time.time()-start_time} seconds to run complete chain")
 
         log.info(f"Saving chain output data to {output_file}")
         with open(output_file, "w") as f:
