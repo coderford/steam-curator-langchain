@@ -13,6 +13,7 @@ LLM_CLASS_MAP = {
     # Ollama models
     "gemma3:4b": ChatOllama,
     "gemma3:12b": ChatOllama,
+    "qwen3:1.7b": ChatOllama,
     "qwen3:4b": ChatOllama,
     "qwen3:8b": ChatOllama,
     "qwen3:14b": ChatOllama,
