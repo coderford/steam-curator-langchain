@@ -52,6 +52,29 @@ def _get_reviews(
     return reviews
 
 
+def calculate_weighted_juice_score(aspect_scores):
+    aspect_weights = {
+        "lore_worldbuilding_atmosphere": 0.25,
+        "exploration": 0.25,
+        "gameplay_mechanics": 0.25,
+        "emotional_engagement": 0.1,
+        "bloat_grinding": 0.15,
+    }
+    if set(aspect_scores.keys()) != set(aggregation_prompts.JUICE_AGGREGATION_PROMPTS.keys()):
+        total_score = 0
+        for aspect in aspect_score.keys():
+            total_score += aspect_scores[aspect]
+        return total_score / len(aspect_scores.keys())
+
+    # bloat/grinding score should be capped to the max of the other scores
+    max_area_scores = max([score for aspect, score in aspect_scores.items() if aspect != "bloat_grinding"])
+    aspect_scores["bloat_grinding"] = min(aspect_scores["bloat_grinding"], max_area_scores)
+    final_score = 0
+    for aspect in aspect_scores.keys():
+        final_score += aspect_weights[aspect] * aspect_scores[aspect]
+    return final_score
+
+
 def run_for_app_id(
     app_id,
     complete_chain,
@@ -68,19 +91,18 @@ def run_for_app_id(
     try:
         chain_output = complete_chain.invoke({"reviews": reviews})
     except OutputParserException as e:
-        raw = getattr(e, "llm_output", e.args[1] if len(e.args) > 1 else None)
-        print("❗️ Failed to parse JSON. Raw LLM output was:\n", raw)
+        log.exception("❗️Failed to parse JSON output. Try re-running with debug mode")
         raise
 
     branches = chain_output["branches"]
-    total_score = 0
     score_breakdown_text = ""
+    aspect_scores = {}
     for aspect in branches:
         aspect_capitalized = aspect.replace("_", " ").capitalize()
         aspect_score = branches[aspect]["aggregate_score"]
-        total_score += aspect_score
+        aspect_scores[aspect] = aspect_score
         score_breakdown_text += f"{aspect_capitalized} ({aspect_score}/10): {branches[aspect]['score_explanation']}\n\n"
-    final_score = total_score / len(branches.keys())
+    final_score = calculate_weighted_juice_score(aspect_scores)
 
     blurb = chain_utils.get_blurb(score_breakdown_text, model=args.blurb_model)
     blurb = f"JUICE Score: {final_score:.1f}. {blurb}"
@@ -191,10 +213,10 @@ if __name__ == "__main__":
     me_group.add_argument("--app_id", type=str, help="Steam app ID")
     me_group.add_argument("--run_for_file", type=str, help="Path to file containing list of app IDs")
     parser.add_argument("--filter_model", type=str, default="qwen3:4b")
-    parser.add_argument("--summarization_model", type=str, default="gemma3:12b")
+    parser.add_argument("--summarization_model", type=str, default="gemini-2.0-flash")
     parser.add_argument("--summarization_batch_size", type=int, default=20, help="Batch size for summarization chain")
-    parser.add_argument("--aggregation_model", type=str, default="gemma3:12b")
-    parser.add_argument("--blurb_model", type=str, default="gemma3:12b")
+    parser.add_argument("--aggregation_model", type=str, default="gemini-2.0-flash")
+    parser.add_argument("--blurb_model", type=str, default="gemini-2.0-flash-lite")
     parser.add_argument("--num_reviews", type=int, default=400, help="Number of reviews to filter")
     parser.add_argument("--language", type=str, default="english", help="Language for reviews")
     parser.add_argument("--num_per_page", type=int, default=100, help="Number of reviews per page")
