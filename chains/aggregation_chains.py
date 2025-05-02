@@ -9,6 +9,7 @@ class AggregationChain(Chain):
     llm: BaseLanguageModel
     prompt_template: str
     output_parser: StructuredOutputParser
+    enable_thinking: bool
 
     @property
     def input_keys(self) -> List[str]:
@@ -23,20 +24,26 @@ class AggregationChain(Chain):
         llm: BaseLanguageModel,
         output_parser: StructuredOutputParser,
         prompt_template: str,
+        enable_thinking: bool = False,
     ):
         super().__init__(
             llm=llm,
             output_parser=output_parser,
             prompt_template=prompt_template,
+            enable_thinking=enable_thinking,
         )
         self.llm = llm
         self.prompt_template = prompt_template
         self.output_parser = output_parser
+        self.enable_thinking = enable_thinking
 
     def _call(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         summary_aspect = inputs["summary_aspect"]
         summaries = [x[summary_aspect] for x in inputs["batch_summaries"]]
-        prompt = ChatPromptTemplate.from_template(self.prompt_template)
+        prompt = ChatPromptTemplate([
+            ("system", "" if self.enable_thinking else "/no_think"),
+            ("human", self.prompt_template)
+        ])
         format_instructions = self.output_parser.get_format_instructions()
         chain = prompt | self.llm | self.output_parser
         
