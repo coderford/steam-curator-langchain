@@ -151,7 +151,7 @@ def make_complete_chain(
     summarization_model="qwen2.5:7b",
     aggregation_model="gemma3:12b",
     summarization_batch_size=12,
-    temperature=0.0,
+    temperature=0.7,
     club_reviews_batch_size=3,
 ):
     """
