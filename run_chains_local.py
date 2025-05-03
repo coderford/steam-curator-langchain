@@ -155,6 +155,7 @@ def main(args):
         print(chain_output["blurb"])
     else:
         app_ids = [x.strip() for x in open(args.run_for_file, "r").readlines()]
+        app_ids = list(set([app_id for app_id in app_ids if app_id]))
         tuples = []
         columns = [
             "app_id",
