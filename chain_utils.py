@@ -1,3 +1,5 @@
+import glog as log
+
 from langchain.chains.sequential import SequentialChain
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnableParallel
@@ -36,7 +38,32 @@ def get_blurb(review_text, model="qwen2.5:7b", temperature=0.7):
     return output
 
 
-def get_filter_chain(model, temperature=0.7):
+def club_reviews(reviews_data, batch_size=3):
+    """
+    Given a list of Steam review data, return another list with similar dicts,
+    but each dict has clubbed review texts.
+
+    :param reviews_data: List of review dictionaries
+    :param batch_size: Number of reviews to club together
+    :return: Clubbed data as a list of dictionaries
+    """
+    log.info(f"Clubbing {len(reviews_data)} reviews into batches of {batch_size}...")
+    review_batches = [reviews_data[i : i + batch_size] for i in range(0, len(reviews_data), batch_size)]
+    clubbed_data = []
+    for review_batch in review_batches:
+        clubbed_recommendation_id = " ".join([review["recommendationid"] for review in review_batch])
+        clubbed_review_text = "\n\n".join([review["review"] for review in review_batch])
+        clubbed_data.append(
+            {
+                "recommendationid": clubbed_recommendation_id,
+                "review": clubbed_review_text,
+            }
+        )
+    log.info(f"Returning {len(clubbed_data)} clubbed reviews")
+    return clubbed_data
+
+
+def get_filter_chain(model, temperature=0.7, club_reviews_batch_size=3):
     """
     Creates a filter chain to determine whether reviews should be included based on certain criteria.
 
@@ -59,7 +86,13 @@ def get_filter_chain(model, temperature=0.7):
     remap_output = RunnableLambda(lambda x: {"remapped_reviews": x["filtered_reviews"]})
     remap_input = RunnableLambda(lambda x: {"reviews": x["remapped_reviews"]})
 
-    filter_chain = deterministic_filter | remap_output | remap_input | llm_filter
+    if club_reviews_batch_size > 1:
+        club_lambda = RunnableLambda(
+            lambda x: {"reviews": club_reviews(x["reviews"], batch_size=club_reviews_batch_size)}
+        )
+        filter_chain = deterministic_filter | remap_output | remap_input | club_lambda | llm_filter
+    else:
+        filter_chain = deterministic_filter | remap_output | remap_input | llm_filter
     return filter_chain
 
 
@@ -119,6 +152,7 @@ def make_complete_chain(
     aggregation_model="gemma3:12b",
     summarization_batch_size=12,
     temperature=0.0,
+    club_reviews_batch_size=3,
 ):
     """
     Creates a complete chain that filters, summarizes, and aggregates reviews using specified language models.
@@ -131,8 +165,12 @@ def make_complete_chain(
     Returns:
         Chain: A LangChain chain that filters, summarizes, and aggregates reviews based on the specified models.
     """
-    filter_chain = get_filter_chain(filter_model, temperature=temperature)
-    summarization_chain = get_summarization_chain(summarization_model, temperature=temperature, batch_size=summarization_batch_size)
+    filter_chain = get_filter_chain(
+        filter_model, temperature=temperature, club_reviews_batch_size=club_reviews_batch_size
+    )
+    summarization_chain = get_summarization_chain(
+        summarization_model, temperature=temperature, batch_size=summarization_batch_size
+    )
     aggregation_chain = get_aggregation_chain(aggregation_model, temperature=temperature)
     complete_chain = filter_chain | summarization_chain | aggregation_chain
     return complete_chain

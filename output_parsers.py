@@ -30,7 +30,7 @@ FILTER_CHAIN_SCHEMAS = [
         name="keep_review",
         description="Boolean true/false, indicates whether to keep the review or not based on your analysis.",
     ),
-    ResponseSchema(name="explanation", description="Short explanation for your decision"),
+    ResponseSchema(name="explanation", description="Short, simple english explanation for your decision without any special characters"),
 ]
 FILTER_CHAIN_PARSER = ThinkingStructuredOutputParser.from_response_schemas(FILTER_CHAIN_SCHEMAS)
 

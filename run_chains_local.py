@@ -121,6 +121,7 @@ def main(args):
         summarization_model=args.summarization_model,
         aggregation_model=args.aggregation_model,
         summarization_batch_size=args.summarization_batch_size,
+        club_reviews_batch_size=args.club_reviews_batch_size,
     )
 
     if args.app_id:
@@ -219,10 +220,10 @@ if __name__ == "__main__":
     me_group.add_argument("--run_for_file", type=str, help="Path to file containing list of app IDs")
     parser.add_argument("--filter_model", type=str, default="qwen3:4b")
     parser.add_argument("--summarization_model", type=str, default="gemini-2.0-flash")
-    parser.add_argument("--summarization_batch_size", type=int, default=20, help="Batch size for summarization chain")
+    parser.add_argument("--summarization_batch_size", type=int, default=12, help="Batch size for summarization chain")
     parser.add_argument("--aggregation_model", type=str, default="gemini-2.0-flash")
     parser.add_argument("--blurb_model", type=str, default="gemini-2.0-flash-lite")
-    parser.add_argument("--num_reviews", type=int, default=400, help="Number of reviews to filter")
+    parser.add_argument("--num_reviews", type=int, default=300, help="Number of reviews to filter")
     parser.add_argument("--language", type=str, default="english", help="Language for reviews")
     parser.add_argument("--num_per_page", type=int, default=100, help="Number of reviews per page")
     parser.add_argument("--filter", type=str, default="recent", help="Filter for reviews. Can be 'all' or 'recent'.")
@@ -235,6 +236,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--overwrite_cache", action="store_true", help="Overwrite cache instead of using it for lookups"
     )
+    parser.add_argument("--club_reviews_batch_size", type=int, default=4, help="Batch size for club reviews")
     args = parser.parse_args()
 
     set_verbose(args.verbose)
