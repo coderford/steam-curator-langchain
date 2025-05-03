@@ -57,11 +57,12 @@ def _get_reviews(
 
 def calculate_weighted_juice_score(aspect_scores):
     aspect_weights = {
-        "lore_worldbuilding_atmosphere": 0.25,
-        "exploration": 0.25,
-        "gameplay_mechanics": 0.25,
+        "lore_worldbuilding_atmosphere": 0.20,
+        "exploration": 0.20,
+        "gameplay_mechanics": 0.20,
         "emotional_engagement": 0.1,
-        "bloat_grinding": 0.15,
+        "bloat_grinding": 0.1,
+        "challenge": 0.20,
     }
     if set(aspect_scores.keys()) != set(aggregation_prompts.JUICE_AGGREGATION_PROMPTS.keys()):
         total_score = 0
@@ -220,10 +221,10 @@ if __name__ == "__main__":
     me_group.add_argument("--run_for_file", type=str, help="Path to file containing list of app IDs")
     parser.add_argument("--filter_model", type=str, default="qwen3:4b")
     parser.add_argument("--summarization_model", type=str, default="gemini-2.0-flash")
-    parser.add_argument("--summarization_batch_size", type=int, default=12, help="Batch size for summarization chain")
+    parser.add_argument("--summarization_batch_size", type=int, default=10, help="Batch size for summarization chain")
     parser.add_argument("--aggregation_model", type=str, default="gemini-2.0-flash")
-    parser.add_argument("--blurb_model", type=str, default="gemini-2.0-flash-lite")
-    parser.add_argument("--num_reviews", type=int, default=300, help="Number of reviews to filter")
+    parser.add_argument("--blurb_model", type=str, default="gemini-2.0-flash")
+    parser.add_argument("--num_reviews", type=int, default=500, help="Number of reviews to filter")
     parser.add_argument("--language", type=str, default="english", help="Language for reviews")
     parser.add_argument("--num_per_page", type=int, default=100, help="Number of reviews per page")
     parser.add_argument("--filter", type=str, default="recent", help="Filter for reviews. Can be 'all' or 'recent'.")

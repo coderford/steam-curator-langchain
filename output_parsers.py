@@ -59,6 +59,10 @@ JUICE_SUMMARIZATION_CHAIN_SCHEMAS = [
         name="bloat_grinding",
         description="Based on the reviews, does the game have a lot of bloat and grindy mechanics/encounters? Do reviewers mention bloat or grindiness? Ignore and DO NOT MENTION cases of repetitiveness due to challenging gameplay or repeated playthroughs.",
     ),
+    ResponseSchema(
+        name="challenge",
+        description="Based on the reviews, does the game come off as difficult and challenging? Do reviewers mention challenges and encounters that are satisfying to complete? Are there any specific mechanics or encounters that are praised for their challenge and difficulty to master?"
+    )
 ]
 JUICE_SUMMARIZATION_CHAIN_PARSER = ThinkingStructuredOutputParser.from_response_schemas(JUICE_SUMMARIZATION_CHAIN_SCHEMAS)
 
@@ -66,6 +70,6 @@ JUICE_AGGREGATION_CHAIN_SCHEMAS = [
     ResponseSchema(
         name="aggregate_score", type="integer", description="Aggregate score out of 10, as per the instructions"
     ),
-    ResponseSchema(name="score_explanation", type="string", description="Detailed explanation for the aggregate score"),
+    ResponseSchema(name="score_explanation", type="string", description="Detailed explanation for the aggregate score, including why a higher or lower score was not assigned."),
 ]
 JUICE_AGGREGATION_CHAIN_PARSER = ThinkingStructuredOutputParser.from_response_schemas(JUICE_AGGREGATION_CHAIN_SCHEMAS)
