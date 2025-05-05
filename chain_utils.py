@@ -97,9 +97,9 @@ def get_filter_chain(model, temperature=0.7, club_reviews_batch_size=3, include_
     else:
         if club_reviews_batch_size > 1:
             club_lambda = RunnableLambda(
-                lambda x: {"filtered_reviews": club_reviews(x["reviews"], batch_size=club_reviews_batch_size)}
+                lambda x: {"filtered_reviews": club_reviews(x["filtered_reviews"], batch_size=club_reviews_batch_size)}
             )
-            filter_chain = deterministic_filter | remap_output | remap_input | club_lambda
+            filter_chain = deterministic_filter | club_lambda
         else:
             filter_chain = deterministic_filter
     return filter_chain
