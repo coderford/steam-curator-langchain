@@ -101,11 +101,18 @@ def run_for_app_id(
     branches = chain_output["branches"]
     score_breakdown_text = ""
     aspect_scores = {}
+    aspect_names = {
+        "lore_worldbuilding_atmosphere": "Lore, Worldbuidling and Atmosphere",
+        "exploration": "Exploration",
+        "gameplay_mechanics": "Gameplay Mechanics",
+        "emotional_engagement": "Emotional Engagement",
+        "bloat_grinding": "Bloat and Grinding",
+        "challenge": "Challenge",
+    }
     for aspect in branches:
-        aspect_capitalized = aspect.replace("_", " ").capitalize()
         aspect_score = branches[aspect]["aggregate_score"]
         aspect_scores[aspect] = aspect_score
-        score_breakdown_text += f"{aspect_capitalized} ({aspect_score}/10): {branches[aspect]['score_explanation']}\n\n"
+        score_breakdown_text += f"{aspect_names[aspect]} ({aspect_score}/10): {branches[aspect]['score_explanation']}\n\n"
     final_score = calculate_weighted_juice_score(aspect_scores)
 
     blurb = chain_utils.get_blurb(score_breakdown_text, model=args.blurb_model)
@@ -125,7 +132,9 @@ def main(args):
         club_reviews_batch_size=args.club_reviews_batch_size,
     )
 
-    if args.app_id:
+    if args.app_id or args.steam_url:
+        if args.steam_url:
+            args.app_id = steam_utils.get_game_id_from_url(args.steam_url)
         game_details = steam_utils.get_game_details(args.app_id)
         name_clean = "".join(e for e in game_details["name"] if e.isalnum() or e.isspace())
         name_clean = name_clean.replace(" ", "_")
@@ -220,12 +229,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Filter reviews")
     me_group = parser.add_mutually_exclusive_group(required=True)
     me_group.add_argument("--app_id", type=str, help="Steam app ID")
+    me_group.add_argument("--steam_url", type=str, help="URL to Steam store page")
     me_group.add_argument("--run_for_file", type=str, help="Path to file containing list of app IDs")
     parser.add_argument("--filter_model", type=str, default="qwen3:4b")
-    parser.add_argument("--summarization_model", type=str, default="gemini-2.0-flash")
+    parser.add_argument("--summarization_model", type=str, default="qwen2.5:7b")
     parser.add_argument("--summarization_batch_size", type=int, default=10, help="Batch size for summarization chain")
-    parser.add_argument("--aggregation_model", type=str, default="gemini-2.0-flash")
-    parser.add_argument("--blurb_model", type=str, default="gemini-2.0-flash")
+    parser.add_argument("--aggregation_model", type=str, default="gemma3:12b")
+    parser.add_argument("--blurb_model", type=str, default="gemma3:12b")
     parser.add_argument("--num_reviews", type=int, default=500, help="Number of reviews to filter")
     parser.add_argument("--language", type=str, default="english", help="Language for reviews")
     parser.add_argument("--num_per_page", type=int, default=100, help="Number of reviews per page")

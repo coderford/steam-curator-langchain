@@ -112,7 +112,7 @@ Output a properly formatted json as described above. Don't forget to include com
 }
 
 BLURB_PROMPT = """
-You are an expert gaming blurb writer. Given a review with game scores, summarize the review into a short blurb (~50 words). Do not mention the game's name. Mention the sub-scores (not the overall JUICE score!) and highlight any standout features (>6 score) that could make the game worth playing, even if the overall JUICE score is lower than 7.
+You are an expert gaming blurb writer. Given a review with game scores, summarize the review into a short blurb (~100 words). Do not mention the game's name. Summarize the strengths and weaknesses of the game. Highlight any standout aspects (score >7).
 
 Here is the review:
 ```
