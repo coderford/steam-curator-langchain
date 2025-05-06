@@ -9,6 +9,7 @@ import pandas as pd
 import glog as log
 from langchain.globals import set_verbose, set_debug, set_llm_cache
 from langchain_community.cache import SQLiteCache
+from langchain_core.callbacks import get_usage_metadata_callback
 from langchain_core.exceptions import OutputParserException
 from tqdm import tqdm
 
@@ -127,6 +128,13 @@ def run_for_app_id(
     chain_output["score_breakdown_text"] = score_breakdown_text
     chain_output["blurb"] = blurb
     return chain_output
+
+
+def main_with_usage_callback(args):
+    with get_usage_metadata_callback() as cb:
+        main(args)
+        print("\nToken Usage Data:")
+        print(json.dumps(cb.usage_metadata, indent=4))
 
 
 def main(args):
@@ -269,4 +277,4 @@ if __name__ == "__main__":
             set_llm_cache(SQLiteCache(database_path=".langchain_cache.db"))
         else:
             set_llm_cache(OverwriteSQLiteCache(database_path=".langchain_cache.db"))
-    main(args)
+    main_with_usage_callback(args)
