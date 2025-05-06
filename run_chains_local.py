@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import statistics
 import time
 from datetime import datetime
 
@@ -55,7 +56,7 @@ def _get_reviews(
     return reviews
 
 
-def calculate_weighted_juice_score(aspect_scores):
+def calculate_weighted_aspects_score(aspect_scores):
     aspect_weights = {
         "lore_worldbuilding_atmosphere": 0.20,
         "exploration": 0.20,
@@ -113,11 +114,16 @@ def run_for_app_id(
         aspect_score = branches[aspect]["aggregate_score"]
         aspect_scores[aspect] = aspect_score
         score_breakdown_text += f"{aspect_names[aspect]} ({aspect_score}/10): {branches[aspect]['score_explanation']}\n\n"
-    final_score = calculate_weighted_juice_score(aspect_scores)
+    
+    top_2_score = statistics.mean(sorted([aspect_scores[aspect] for aspect in branches if aspect != "bloat_grinding"], reverse=True)[:2])
+    all_score = calculate_weighted_aspects_score(aspect_scores)
+    juice_score = (all_score + top_2_score) / 2
 
     blurb = chain_utils.get_blurb(score_breakdown_text, model=args.blurb_model)
-    blurb = f"JUICE Score: {final_score:.1f}. {blurb}"
-    chain_output["final_score"] = final_score
+    blurb = f"JUICE Score: {juice_score:.1f}. {blurb}"
+    chain_output["all_score"] = all_score
+    chain_output["top_2_score"] = top_2_score
+    chain_output["juice_score"] = juice_score
     chain_output["score_breakdown_text"] = score_breakdown_text
     chain_output["blurb"] = blurb
     return chain_output
@@ -157,7 +163,7 @@ def main(args):
         with open(output_file, "w") as f:
             json.dump(chain_output, f, indent=4)
 
-        print(f"\nJUICE SCORE: {chain_output['final_score']:.1f}/10\n")
+        print(f"\nJUICE SCORE: {chain_output['juice_score']:.1f}/10\n")
         print(chain_output["score_breakdown_text"])
         print("Blurb Version")
         print("-------------")
@@ -173,6 +179,8 @@ def main(args):
             "metacritic_score",
             "genres",
             "juice_score",
+            "top_2_score",
+            "all_score",
             "blurb",
         ]
         review_aspects = sorted(list(aggregation_prompts.JUICE_AGGREGATION_PROMPTS.keys()))
@@ -209,7 +217,9 @@ def main(args):
                 f"store.steampowered.com/app/{app_id}",
                 game_details.get("metacritic", {}).get("score", None),
                 json.dumps(genres),
-                chain_output["final_score"],
+                chain_output["juice_score"],
+                chain_output["top_2_score"],
+                chain_output["all_score"],
                 chain_output["blurb"],
             ]
             for aspect in review_aspects:
@@ -232,10 +242,10 @@ if __name__ == "__main__":
     me_group.add_argument("--steam_url", type=str, help="URL to Steam store page")
     me_group.add_argument("--run_for_file", type=str, help="Path to file containing list of app IDs")
     parser.add_argument("--filter_model", type=str, default="qwen3:4b")
-    parser.add_argument("--summarization_model", type=str, default="qwen2.5:7b")
+    parser.add_argument("--summarization_model", type=str, default="gemini-2.0-flash")
     parser.add_argument("--summarization_batch_size", type=int, default=10, help="Batch size for summarization chain")
-    parser.add_argument("--aggregation_model", type=str, default="gemma3:12b")
-    parser.add_argument("--blurb_model", type=str, default="gemma3:12b")
+    parser.add_argument("--aggregation_model", type=str, default="gemini-2.0-flash")
+    parser.add_argument("--blurb_model", type=str, default="gemini-2.0-flash-lite")
     parser.add_argument("--num_reviews", type=int, default=500, help="Number of reviews to filter")
     parser.add_argument("--language", type=str, default="english", help="Language for reviews")
     parser.add_argument("--num_per_page", type=int, default=100, help="Number of reviews per page")
