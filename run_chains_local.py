@@ -250,7 +250,7 @@ def main(args):
         output_file = f"run_results_{datetime.now().strftime('%Y-%m-%d_%H:%M')}.csv"
         log.info(f"Saving results to {output_file}")
         df.to_csv(output_file, index=False)
-        skipped_app_ids_filename = f"skipped_app_ids_{int(time.time)}.txt"
+        skipped_app_ids_filename = f"skipped_app_ids_{int(time.time())}.json"
         log.info(f"Saving skipped app_ids to {skipped_app_ids_filename}")
         with open(skipped_app_ids_filename, "w") as f:
             json.dump(skipped_app_ids, f, indent=4)
