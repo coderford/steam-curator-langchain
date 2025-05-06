@@ -53,7 +53,7 @@ def _get_reviews(
             filter=review_filter,
             review_type=review_type,
         ).get("reviews", [])
-        reviews.extend(remainder_reviews[:num_reviews - len(reviews)])
+        reviews.extend(remainder_reviews[: num_reviews - len(reviews)])
     return reviews
 
 
@@ -114,9 +114,13 @@ def run_for_app_id(
     for aspect in branches:
         aspect_score = branches[aspect]["aggregate_score"]
         aspect_scores[aspect] = aspect_score
-        score_breakdown_text += f"{aspect_names[aspect]} ({aspect_score}/10): {branches[aspect]['score_explanation']}\n\n"
-    
-    top_2_score = statistics.mean(sorted([aspect_scores[aspect] for aspect in branches if aspect != "bloat_grinding"], reverse=True)[:2])
+        score_breakdown_text += (
+            f"{aspect_names[aspect]} ({aspect_score}/10): {branches[aspect]['score_explanation']}\n\n"
+        )
+
+    top_2_score = statistics.mean(
+        sorted([aspect_scores[aspect] for aspect in branches if aspect != "bloat_grinding"], reverse=True)[:2]
+    )
     all_score = calculate_weighted_aspects_score(aspect_scores)
     juice_score = (all_score + top_2_score) / 2
 
@@ -178,8 +182,9 @@ def main(args):
         print(chain_output["blurb"])
     else:
         app_ids = [x.strip() for x in open(args.run_for_file, "r").readlines()]
-        app_ids = list(set([app_id for app_id in app_ids if app_id]))
+        app_ids = sorted(list(set([app_id for app_id in app_ids if app_id])))
         tuples = []
+        skipped_app_ids = []
         columns = [
             "app_id",
             "name",
@@ -199,9 +204,12 @@ def main(args):
         for app_id in tqdm(app_ids):
             try:
                 game_details = steam_utils.get_game_details(app_id.strip())
+                if not game_details:
+                    raise ValueError(f"Failed to fetch game details for app_id={app_id}")
             except Exception as e:
                 log.exception(f"Error getting game details for app_id={args.app_id}: {e}")
                 log.info(f"Skipping {app_id} due to error")
+                skipped_app_ids.append(app_id)
                 continue
             genres = [g["description"] for g in game_details.get("genres", [])]
             log.info(f"Running for app_id {app_id}: {game_details['name']}")
@@ -216,8 +224,9 @@ def main(args):
                     review_type=args.review_type,
                 )
             except Exception as e:
-                log.exception(f"Error running chain for app_id={app_id}: {e}")
+                log.error(f"Error running chain for app_id={app_id}: {e}")
                 log.info(f"Skipping {app_id} due to error")
+                skipped_app_ids.append(app_id)
                 continue
             datapoint = [
                 app_id,
@@ -235,12 +244,17 @@ def main(args):
                 aspect_explanation = chain_output["branches"][aspect]["score_explanation"]
                 datapoint.extend([aspect_score, aspect_explanation])
             tuples.append(datapoint)
-            print(f"{game_details['name']}, {chain_output['blurb']}")
+            # print(f"{game_details['name']}, {chain_output['blurb']}")
 
         df = pd.DataFrame(tuples, columns=columns)
         output_file = f"run_results_{datetime.now().strftime('%Y-%m-%d_%H:%M')}.csv"
         log.info(f"Saving results to {output_file}")
         df.to_csv(output_file, index=False)
+        skipped_app_ids_filename = f"skipped_app_ids_{int(time.time)}.txt"
+        log.info(f"Saving skipped app_ids to {skipped_app_ids_filename}")
+        with open(skipped_app_ids_filename, "w") as f:
+            json.dump(skipped_app_ids, f, indent=4)
+        log.info(f"Done!")
 
 
 if __name__ == "__main__":
