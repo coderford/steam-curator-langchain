@@ -10,6 +10,7 @@ from prompts import filter_prompts
 class DeterministicFilterChain(Chain):
     min_words: int
     min_playtime: int
+    ret_all_if_empty: bool
 
     @property
     def input_keys(self) -> List[str]:
@@ -19,10 +20,11 @@ class DeterministicFilterChain(Chain):
     def output_keys(self) -> List[str]:
         return ["filtered_reviews"]
 
-    def __init__(self, min_words: int = 5, min_playtime: int = 5 * 60):
-        super().__init__(min_words=min_words, min_playtime=min_playtime)
+    def __init__(self, min_words: int = 5, min_playtime: int = 5 * 60, ret_all_if_empty: bool = True):
+        super().__init__(min_words=min_words, min_playtime=min_playtime, ret_all_if_empty=ret_all_if_empty)
         self.min_words = min_words
         self.min_playtime = min_playtime
+        self.ret_all_if_empty = ret_all_if_empty
 
     def is_review_too_small(self, review_text: str) -> bool:
         return len(review_text.split(" ")) < self.min_words
@@ -37,6 +39,8 @@ class DeterministicFilterChain(Chain):
         for review_data in inputs["reviews"]:
             if not self.is_review_too_small(review_data["review"]) and not self.is_playtime_too_low(review_data):
                 filtered_reviews.append(review_data)
+        if len(filtered_reviews) < 10 and self.ret_all_if_empty:
+            return {"filtered_reviews": inputs["reviews"]}
         return {"filtered_reviews": filtered_reviews}
 
 
