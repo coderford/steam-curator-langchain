@@ -119,5 +119,7 @@ Here is the review:
 {review_text}
 ```
 
+Mention the sub-scores wherever possible. DO NOT mention the overall JUICE score.
+
 Output only the blurb text, nothing else.
 """
