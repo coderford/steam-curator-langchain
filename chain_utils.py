@@ -47,6 +47,10 @@ def club_reviews(reviews_data, batch_size=3):
     :param batch_size: Number of reviews to club together
     :return: Clubbed data as a list of dictionaries
     """
+    if batch_size <= 1:
+        log.info("Clubbing batch size is <= 1, no clubbing required, returning original data")
+        return reviews_data
+
     log.info(f"Clubbing {len(reviews_data)} reviews into batches of {batch_size}...")
     review_batches = [reviews_data[i : i + batch_size] for i in range(0, len(reviews_data), batch_size)]
     clubbed_data = []
@@ -74,35 +78,20 @@ def get_filter_chain(model, temperature=0.7, club_reviews_batch_size=3, include_
     Returns:
         Chain: A LangChain chain that includes deterministic filtering and LLM-based filtering.
     """
-    deterministic_filter = filter_chains.DeterministicFilterChain()
+    deterministic_filter = filter_chains.DeterministicFilterChain() | RunnableLambda(
+        lambda x: {"filtered_reviews": club_reviews(x["filtered_reviews"], club_reviews_batch_size)}
+    )
 
     if include_llm_filter:
-        filter_llm = get_language_model(model=model, temperature=temperature)
         llm_filter = filter_chains.LLMFilterChain(
-            filter_llm,
+            model=get_language_model(model=model, temperature=temperature),
             output_parser=output_parsers.FILTER_CHAIN_PARSER,
             prompt_template=filter_prompts.FLUFF_FILTER_PROMPT,
         )
+        remap_output = RunnableLambda(lambda x: {"reviews": x["filtered_reviews"]})
+        return deterministic_filter | remap_output | llm_filter
 
-        remap_output = RunnableLambda(lambda x: {"remapped_reviews": x["filtered_reviews"]})
-        remap_input = RunnableLambda(lambda x: {"reviews": x["remapped_reviews"]})
-
-        if club_reviews_batch_size > 1:
-            club_lambda = RunnableLambda(
-                lambda x: {"reviews": club_reviews(x["reviews"], batch_size=club_reviews_batch_size)}
-            )
-            filter_chain = deterministic_filter | remap_output | remap_input | club_lambda | llm_filter
-        else:
-            filter_chain = deterministic_filter | remap_output | remap_input | llm_filter
-    else:
-        if club_reviews_batch_size > 1:
-            club_lambda = RunnableLambda(
-                lambda x: {"filtered_reviews": club_reviews(x["filtered_reviews"], batch_size=club_reviews_batch_size)}
-            )
-            filter_chain = deterministic_filter | club_lambda
-        else:
-            filter_chain = deterministic_filter
-    return filter_chain
+    return deterministic_filter
 
 
 def get_summarization_chain(model, temperature=0.7, batch_size=12):
