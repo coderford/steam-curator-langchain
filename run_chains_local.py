@@ -148,6 +148,7 @@ def main(args):
         aggregation_model=args.aggregation_model,
         summarization_batch_size=args.summarization_batch_size,
         club_reviews_batch_size=args.club_reviews_batch_size,
+        include_llm_filter=args.enable_llm_filter,
     )
 
     if args.app_id or args.steam_url:
@@ -263,7 +264,8 @@ if __name__ == "__main__":
     me_group.add_argument("--app_id", type=str, help="Steam app ID")
     me_group.add_argument("--steam_url", type=str, help="URL to Steam store page")
     me_group.add_argument("--run_for_file", type=str, help="Path to file containing list of app IDs")
-    parser.add_argument("--filter_model", type=str, default="qwen3:4b")
+    parser.add_argument("--enable_llm_filter", action="store_true", help="Enable LLM filtering")
+    parser.add_argument("--filter_model", type=str, default="qwen2.5:7b")
     parser.add_argument("--summarization_model", type=str, default="gemini-2.0-flash")
     parser.add_argument("--summarization_batch_size", type=int, default=10, help="Batch size for summarization chain")
     parser.add_argument("--aggregation_model", type=str, default="gemini-2.0-flash")

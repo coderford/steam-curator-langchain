@@ -151,6 +151,7 @@ def make_complete_chain(
     summarization_batch_size=12,
     temperature=0.7,
     club_reviews_batch_size=3,
+    include_llm_filter=False,
 ):
     """
     Creates a complete chain that filters, summarizes, and aggregates reviews using specified language models.
@@ -164,7 +165,10 @@ def make_complete_chain(
         Chain: A LangChain chain that filters, summarizes, and aggregates reviews based on the specified models.
     """
     filter_chain = get_filter_chain(
-        filter_model, temperature=temperature, club_reviews_batch_size=club_reviews_batch_size
+        filter_model,
+        temperature=temperature,
+        club_reviews_batch_size=club_reviews_batch_size,
+        include_llm_filter=include_llm_filter,
     )
     summarization_chain = get_summarization_chain(
         summarization_model, temperature=temperature, batch_size=summarization_batch_size
