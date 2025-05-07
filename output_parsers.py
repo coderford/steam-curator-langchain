@@ -27,10 +27,9 @@ class ThinkingStructuredOutputParser(StructuredOutputParser):
 
 FILTER_CHAIN_SCHEMAS = [
     ResponseSchema(
-        name="keep_review",
-        description="Boolean true/false, indicates whether to keep the review or not based on your analysis.",
+        name="clean_review_text",
+        description="The cleaned review text without any meme/fluff content, keeping all the genuine text. In case there is no genuine text to be found, this should be a single word - EMPTY",
     ),
-    ResponseSchema(name="explanation", description="Short, simple english explanation for your decision without any special characters"),
 ]
 FILTER_CHAIN_PARSER = ThinkingStructuredOutputParser.from_response_schemas(FILTER_CHAIN_SCHEMAS)
 

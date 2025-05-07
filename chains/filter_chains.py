@@ -96,7 +96,8 @@ class LLMFilterChain(Chain):
         outputs = filter_chain.batch(batch_inputs)
         assert len(outputs) == len(reviews)
         for review_data, output in zip(reviews, outputs):
-            if output.get("keep_review", True):
+            if " " in output["clean_review_text"]:
+                review_data["review"] = output["clean_review_text"]
                 filtered_reviews.append(review_data)
 
         return {"filtered_reviews": filtered_reviews}

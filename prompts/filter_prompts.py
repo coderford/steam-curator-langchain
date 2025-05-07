@@ -1,5 +1,5 @@
 FLUFF_FILTER_PROMPT = """
-You are an expert at differentiating between genuine reviews and memes or fluff reviews that don't actually reference anything substantial about the game. Your task is to classify the given reviews as genuine or disingenuous and output whether to keep or discard the review based on your analysis. We must only keep genuine reviews.
+You are an expert at differentiating between genuine reviews and memes or fluff reviews that don't actually reference anything substantial about the game. Your task is to remove any meme/fluff/disingenuous content from the given review and output only the genuine content. Do not rewrite the reviews - just remove the fluff/disingenuous sentences.
 
 Here's a few sample genuine reviews. Notice how they reference aspects or features of the game:
 - "It will always be my favorite. But the amount of wall hackers is wild, on the flip side if you're good at swinging you can hit them first. Go kill the cheaters and make them call you one instead. This is the ultimate goal."
@@ -11,10 +11,12 @@ Here's a few sample disingenuous reviews. Notice how they don't reference say an
 - "made me racist to everyone"
 - "Great game would recommend to others it did ruin my relationship with my girlfriend but other than that peak game who needs girlfriend when you have Micheal reeves in a game."
 
-Provide your classification and explain it for the following review:
+Here's the review text:
 ```
 {review_text}
 ```
+
+Remember to include anything tells specific details about the game.
 
 {format_instructions}
 """

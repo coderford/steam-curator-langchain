@@ -84,7 +84,7 @@ def get_filter_chain(model, temperature=0.7, club_reviews_batch_size=3, include_
 
     if include_llm_filter:
         llm_filter = filter_chains.LLMFilterChain(
-            model=get_language_model(model=model, temperature=temperature),
+            get_language_model(model=model, temperature=temperature),
             output_parser=output_parsers.FILTER_CHAIN_PARSER,
             prompt_template=filter_prompts.FLUFF_FILTER_PROMPT,
         )

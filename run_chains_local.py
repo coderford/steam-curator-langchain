@@ -42,18 +42,17 @@ def _get_reviews(
         review_type=review_type,
     ).get("reviews", [])
 
-    # if number of reviews is < num_revies, try to get rest with languages = 'all'
+    # if number of reviews is < num_revies, try to get instead with languages = 'all'
     if len(reviews) < num_reviews and allow_other_languages:
-        log.info(f"Couldn't get enough reviews in {language}, trying to get the rest with all languages")
-        remainder_reviews = steam_utils.get_user_reviews(
+        log.info(f"Couldn't get enough reviews in {language}, trying to with all languages instead")
+        return steam_utils.get_user_reviews(
             app_id,
-            limit=num_reviews - len(reviews),
-            num_per_page=min(num_reviews - len(reviews), num_per_page),
+            limit=num_reviews,
+            num_per_page=num_per_page,
             language="all",
             filter=review_filter,
             review_type=review_type,
         ).get("reviews", [])
-        reviews.extend(remainder_reviews[: num_reviews - len(reviews)])
     return reviews
 
 
@@ -265,7 +264,7 @@ if __name__ == "__main__":
     me_group.add_argument("--steam_url", type=str, help="URL to Steam store page")
     me_group.add_argument("--run_for_file", type=str, help="Path to file containing list of app IDs")
     parser.add_argument("--enable_llm_filter", action="store_true", help="Enable LLM filtering")
-    parser.add_argument("--filter_model", type=str, default="qwen2.5:7b")
+    parser.add_argument("--filter_model", type=str, default="gemini-2.0-flash-lite")
     parser.add_argument("--summarization_model", type=str, default="gemini-2.0-flash")
     parser.add_argument("--summarization_batch_size", type=int, default=10, help="Batch size for summarization chain")
     parser.add_argument("--aggregation_model", type=str, default="gemini-2.0-flash")
