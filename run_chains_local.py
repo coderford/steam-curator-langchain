@@ -244,7 +244,7 @@ def main(args):
                 aspect_explanation = chain_output["branches"][aspect]["score_explanation"]
                 datapoint.extend([aspect_score, aspect_explanation])
             tuples.append(datapoint)
-            # print(f"{game_details['name']}, {chain_output['blurb']}")
+            log.info(f"{game_details['name']}, {chain_output['blurb']}")
 
         df = pd.DataFrame(tuples, columns=columns)
         output_file = f"run_results_{datetime.now().strftime('%Y-%m-%d_%H:%M')}.csv"
