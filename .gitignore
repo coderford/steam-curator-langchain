@@ -5,3 +5,4 @@ venv/*
 *.log
 .*api_key
 *.csv
+temp/*
