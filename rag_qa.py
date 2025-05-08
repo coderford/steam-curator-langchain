@@ -67,12 +67,12 @@ def make_retrieval_qa_chain(
     temperature=0.7,
 ):
     loader = SteamReviewsLoader(app_id, num_reviews=num_reviews, summarization_model=summarization_model)
-    embedder = chain_utils.get_embedding_model(args.embedding_model, temperature=0.7)
+    embedder = chain_utils.get_embedding_model(embedding_model, temperature=0.7)
 
     db = DocArrayInMemorySearch.from_documents(loader.load(), embedder)
     retriever = db.as_retriever()
 
-    llm = chain_utils.get_language_model(args.chat_model, temperature=0.7)
+    llm = chain_utils.get_language_model(chat_model, temperature=0.7)
     retrieval_qa_chat_prompt = hub.pull("langchain-ai/retrieval-qa-chat")
     combine_docs_chain = create_stuff_documents_chain(llm, retrieval_qa_chat_prompt)
     rag_chain = create_retrieval_chain(retriever, combine_docs_chain)
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--interactive", action="store_true", help="Run in interactive loop mode")
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
-    parser.add_argument("--temperature", type=float, default=0.7, help="Temperature fo all models")
+    parser.add_argument("-t", "--temperature", type=float, default=0.7, help="Temperature fo all models")
     args = parser.parse_args()
 
     set_verbose(args.verbose)
