@@ -12,6 +12,13 @@ from chains import filter_chains, summarization_chains, aggregation_chains
 from prompts import filter_prompts, summarization_prompts, aggregation_prompts
 
 
+def get_embedding_model(model, temperature=0.7):
+    EmbeddingClass = model_registry.EMBEDDING_CLASS_MAP.get(model)
+    if EmbeddingClass is None:
+        raise ValueError(f"Unrecognized embedding model: {model}")
+    return EmbeddingClass(model=model, temperature=temperature)
+
+
 def get_language_model(model, temperature=0.7):
     LLMClass = model_registry.LLM_CLASS_MAP.get(model)
     if LLMClass is None:

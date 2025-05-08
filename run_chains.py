@@ -13,6 +13,7 @@ from langchain_core.callbacks import get_usage_metadata_callback
 from langchain_core.exceptions import OutputParserException
 from tqdm import tqdm
 
+import constants
 import chain_utils
 import steam_utils
 from prompts import aggregation_prompts
@@ -102,19 +103,11 @@ def run_for_app_id(
     branches = chain_output["branches"]
     score_breakdown_text = ""
     aspect_scores = {}
-    aspect_names = {
-        "lore_worldbuilding_atmosphere": "Lore, Worldbuidling and Atmosphere",
-        "exploration": "Exploration",
-        "gameplay_mechanics": "Gameplay Mechanics",
-        "emotional_engagement": "Emotional Engagement",
-        "bloat_grinding": "Bloat and Grinding",
-        "challenge": "Challenge",
-    }
     for aspect in branches:
         aspect_score = branches[aspect]["aggregate_score"]
         aspect_scores[aspect] = aspect_score
         score_breakdown_text += (
-            f"{aspect_names[aspect]} ({aspect_score}/10): {branches[aspect]['score_explanation']}\n\n"
+            f"{constants.ASPECT_NAMES[aspect]} ({aspect_score}/10): {branches[aspect]['score_explanation']}\n\n"
         )
 
     top_2_score = statistics.mean(

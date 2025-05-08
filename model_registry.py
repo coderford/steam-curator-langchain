@@ -1,6 +1,8 @@
-from langchain_ollama import ChatOllama
 from langchain_community.chat_models.openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai.embeddings import GoogleGenerativeAIEmbeddings
+from langchain_ollama import ChatOllama
+from langchain_ollama.embeddings import OllamaEmbeddings
 
 
 THINKING_MODELS = [
@@ -29,4 +31,14 @@ LLM_CLASS_MAP = {
     # Google models
     "gemini-2.0-flash": ChatGoogleGenerativeAI,
     "gemini-2.0-flash-lite": ChatGoogleGenerativeAI,
+}
+
+EMBEDDING_CLASS_MAP = {
+    # Google models
+    "models/text-embedding-004": GoogleGenerativeAIEmbeddings,
+    "models/gemini-embedding-exp": GoogleGenerativeAIEmbeddings,
+
+    # Ollama models
+    "nomic-embed-text:latest": OllamaEmbeddings,
+    "snowflake-arctic-embed2": OllamaEmbeddings,
 }
