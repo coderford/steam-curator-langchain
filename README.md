@@ -9,11 +9,13 @@ Also includes a command-line QA interface powered by Retrieval-Augmented Generat
 
 Run `run_chains.py` to get Juice Score and detailed explanations for a given Steam app ID:
 ```sh
+export GOOGLE_API_KEY=<your google gemini API key>
 python3 run_chains.py --app_id 1245620 # Get Juice score for Elden Ring
 ```
 
 Run `rag_qa.py` to set up an interactive QA interface based on reviews of a given game:
 ```sh
+export GOOGLE_API_KEY=<your google gemini API key>
 python3 rag_qa.py -i 1245620
 ```
 
