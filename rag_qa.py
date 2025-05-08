@@ -58,8 +58,15 @@ class SteamReviewsLoader(BaseLoader):
             yield Document(page_content=review["review"], metadata={"recommendationid": review["recommendationid"]})
 
 
-def main(args):
-    loader = SteamReviewsLoader(args.app_id, num_reviews=args.num_reviews, summarization_model=args.summarization_model)
+def make_retrieval_qa_chain(
+    app_id,
+    num_reviews=500,
+    summarization_model="qwen2.5:7b",
+    embedding_model="nomic-text-embed:latest",
+    chat_model="gemma3:4b",
+    temperature=0.7,
+):
+    loader = SteamReviewsLoader(app_id, num_reviews=num_reviews, summarization_model=summarization_model)
     embedder = chain_utils.get_embedding_model(args.embedding_model, temperature=0.7)
 
     db = DocArrayInMemorySearch.from_documents(loader.load(), embedder)
@@ -69,6 +76,18 @@ def main(args):
     retrieval_qa_chat_prompt = hub.pull("langchain-ai/retrieval-qa-chat")
     combine_docs_chain = create_stuff_documents_chain(llm, retrieval_qa_chat_prompt)
     rag_chain = create_retrieval_chain(retriever, combine_docs_chain)
+    return rag_chain
+
+
+def main(args):
+    rag_chain = make_retrieval_qa_chain(
+        args.app_id,
+        num_reviews=args.num_reviews,
+        summarization_model=args.summarization_model,
+        embedding_model=args.embedding_model,
+        chat_model=args.chat_model,
+        temperature=args.temperature,
+    )
 
     if args.interactive:
         print("Type 'exit' or 'quit' to exit")
@@ -98,6 +117,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--interactive", action="store_true", help="Run in interactive loop mode")
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument("--temperature", type=float, default=0.7, help="Temperature fo all models")
     args = parser.parse_args()
 
     set_verbose(args.verbose)
