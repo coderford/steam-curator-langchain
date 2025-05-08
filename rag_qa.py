@@ -45,6 +45,7 @@ class SteamReviewsLoader(BaseLoader):
         )
         self.num_reviews = len(self.reviews)
 
+        # Also add aspect-wise summaries for better context
         filter_chain = chain_utils.get_filter_chain(model="", include_llm_filter=False, club_reviews_batch_size=3)
         summarization_chain = chain_utils.get_summarization_chain(model=summarization_model, temperature=0.7)
         summarization_output = (filter_chain | summarization_chain).invoke({"reviews": self.reviews})
