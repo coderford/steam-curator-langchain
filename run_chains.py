@@ -276,6 +276,7 @@ if __name__ == "__main__":
         "--overwrite_cache", action="store_true", help="Overwrite cache instead of using it for lookups"
     )
     parser.add_argument("--club_reviews_batch_size", type=int, default=4, help="Batch size for club reviews")
+    parser.add_argument("--report_token_usage", action="store_true", help="Report token usage")
     args = parser.parse_args()
 
     set_verbose(args.verbose)
@@ -285,4 +286,8 @@ if __name__ == "__main__":
             set_llm_cache(SQLiteCache(database_path=".langchain_cache.db"))
         else:
             set_llm_cache(OverwriteSQLiteCache(database_path=".langchain_cache.db"))
-    main_with_usage_callback(args)
+    
+    if args.report_token_usage:
+        main_with_usage_callback(args)
+    else:
+        main(args)
