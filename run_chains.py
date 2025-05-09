@@ -168,11 +168,8 @@ def main(args):
         with open(output_file, "w") as f:
             json.dump(chain_output, f, indent=4)
 
-        print(f"\nJUICE SCORE: {chain_output['juice_score']:.1f}/10\n")
+        print("\n" + chain_output["blurb"] + "\n")
         print(chain_output["score_breakdown_text"])
-        print("Blurb Version")
-        print("-------------")
-        print(chain_output["blurb"])
     else:
         app_ids = [x.strip() for x in open(args.run_for_file, "r").readlines()]
         app_ids = sorted(list(set([app_id for app_id in app_ids if app_id])))
