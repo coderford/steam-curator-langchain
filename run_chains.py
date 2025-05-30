@@ -170,6 +170,12 @@ def main(args):
 
         print("\n" + chain_output["blurb"] + "\n")
         print(chain_output["score_breakdown_text"])
+        print(f"JUICE Score: {chain_output['juice_score']:.1f} (", end="")
+        print(", ".join([
+            f"{constants.ASPECT_ABBRS[aspect]}: {chain_output['branches'][aspect]['aggregate_score']:.1f}"
+            for aspect in constants.ASPECT_ABBRS
+        ]), end="")
+        print(")")
     else:
         app_ids = [x.strip() for x in open(args.run_for_file, "r").readlines()]
         app_ids = sorted(list(set([app_id for app_id in app_ids if app_id])))

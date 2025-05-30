@@ -6,3 +6,12 @@ ASPECT_NAMES = {
     "bloat_grinding": "Bloat and Grinding",
     "challenge": "Challenge",
 }
+
+ASPECT_ABBRS = {
+    "lore_worldbuilding_atmosphere": "LWA",
+    "exploration": "EXP",
+    "gameplay_mechanics": "GM",
+    "emotional_engagement": "EE",
+    "bloat_grinding": "BG",
+    "challenge": "CHL",
+}
